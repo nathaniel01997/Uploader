@@ -1,0 +1,5 @@
+Server=localhost
+Database=rproods
+Username=reportuser
+Password=report
+Port=1521

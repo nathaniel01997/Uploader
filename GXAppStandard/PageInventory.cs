@@ -5,6 +5,7 @@ using Microsoft.VisualBasic.FileIO;
 using Oracle.ManagedDataAccess.Client;
 using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Data;
 using System.Drawing;
 using System.IO;
@@ -45,8 +46,7 @@ namespace GXUploader
         {
             InitializeComponent();
 
-            var cfg = DbConfigRepository.Load();
-            _connString = DbConfigRepository.BuildOracleConnectionString(cfg);
+            _connString = ConfigurationManager.AppSettings["OracleConnection"];
 
             _prismCfg = PrismConfigRepository.Load();
 
@@ -600,7 +600,7 @@ namespace GXUploader
                         string payloadJson = JsonSerializer.Serialize(apiPayload);
 
                         // Write payload before creation
-                        WriteApiPayloadResponseToDailyFile(vendCode, payloadJson, "CREATING");
+                        //WriteApiPayloadResponseToDailyFile(vendCode, payloadJson, "CREATING");
 
                         // Create vendor
                         await CreateVendorAsync(vendCode, vendName, subsidiarySid);
@@ -821,9 +821,6 @@ namespace GXUploader
                     };
 
                     string json = JsonSerializer.Serialize(payload);
-
-                    // Add debugger breakpoint to inspect payload & flow
-                    System.Diagnostics.Debugger.Break();
 
                     using var req = new HttpRequestMessage(HttpMethod.Post, url);
                     req.Content = new StringContent(json, Encoding.UTF8, "application/json");
@@ -1996,8 +1993,8 @@ namespace GXUploader
             }
         }
 
-        //old adding new data if not existed
-        //private void UpdateTextUdfSidFromDb(DataTable payloadDt)
+
+        //private void UpdateTextUdfSidFromDb(DataTable payloadDt)         //old adding new data if not existed
         //{
         //    if (payloadDt.Rows.Count == 0)
         //    {

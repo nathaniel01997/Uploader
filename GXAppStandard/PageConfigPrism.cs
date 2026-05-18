@@ -17,7 +17,7 @@ namespace GXUploader
             btnSave.Click += BtnSave_Click;
             btnReload.Click += BtnReload_Click;
 
-            LoadFromDb();
+            LoadFromFile();
         }
 
         private void UpdateWorkstation()
@@ -34,7 +34,7 @@ namespace GXUploader
             txtWs.Text = $"{host}:{port}";
         }
 
-        private void LoadFromDb()
+        private void LoadFromFile()
         {
             try
             {
@@ -45,7 +45,6 @@ namespace GXUploader
                 txtPass.Text = cfg.Password;
                 txtPort.Text = cfg.Port.ToString();
 
-                // Set radio selection
                 if (cfg.ScanType == 0)
                     rbUPC.Checked = true;
                 else
@@ -55,14 +54,18 @@ namespace GXUploader
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Failed to load Prism config:\n" + ex.Message,
-                    "Load Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(
+                    "Failed to load Prism config:\n" + ex.Message,
+                    "Load Error",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error
+                );
             }
         }
 
         private void BtnReload_Click(object sender, EventArgs e)
         {
-            LoadFromDb();
+            LoadFromFile();
         }
 
         private void BtnSave_Click(object sender, EventArgs e)
@@ -71,12 +74,14 @@ namespace GXUploader
             {
                 if (!int.TryParse(txtPort.Text.Trim(), out int port))
                 {
-                    MessageBox.Show("Port must be a number.", "Validation",
-                        MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    MessageBox.Show(
+                        "Port must be a number.",
+                        "Validation",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Warning
+                    );
                     return;
                 }
-
-                int scanType = rbUPC.Checked ? 0 : 1;
 
                 var cfg = new PrismConfig
                 {
@@ -84,18 +89,26 @@ namespace GXUploader
                     Username = txtUser.Text.Trim(),
                     Password = txtPass.Text,
                     Port = port,
-                    ScanType = scanType
+                    ScanType = rbUPC.Checked ? 0 : 1
                 };
 
                 PrismConfigRepository.Save(cfg);
 
-                MessageBox.Show("Saved successfully!", "Prism Configuration",
-                    MessageBoxButtons.OK, MessageBoxIcon.Information);
+                MessageBox.Show(
+                    "Saved successfully!",
+                    "Prism Configuration",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information
+                );
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Save failed:\n" + ex.Message,
-                    "Save Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(
+                    "Save failed:\n" + ex.Message,
+                    "Save Error",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error
+                );
             }
         }
     }

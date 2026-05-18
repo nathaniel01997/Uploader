@@ -1,5 +1,6 @@
-﻿using System;
-using Oracle.ManagedDataAccess.Client;
+﻿using Oracle.ManagedDataAccess.Client;
+using System;
+using System.Configuration;
 
 namespace GXUploader.Helpers
 {
@@ -7,8 +8,7 @@ namespace GXUploader.Helpers
     {
         // Oracle connection string
         private static readonly string ConnString =
-            "User Id=reportuser;Password=report;Data Source=localhost:1521/rproods;Connection Timeout=300;"; //12C Below
-            //"User Id=reportuser;Password=report;Data Source=localhost:1521/rproods.prism;Connection Timeout=300;"; //19C higher
+            ConfigurationManager.AppSettings["OracleConnection"];
 
         private static string _cachedUploaderSid;
 

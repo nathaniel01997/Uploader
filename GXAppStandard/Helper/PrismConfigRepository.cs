@@ -7,20 +7,24 @@ namespace GXUploader.Helpers
     {
         public class PrismConfig
         {
+            // MySQL
             public string Host { get; set; } = "";
             public string Username { get; set; } = "";
             public string Password { get; set; } = "";
-            public int Port { get; set; } = 3307;
+            public int Port { get; set; } = 8080;
 
-            // UI may show this, but repository controls its value
+            // Auto generated
             public string Workstation { get; set; } = "";
 
             // 0 = UPC, 1 = ALU
             public int ScanType { get; set; } = 0;
+
         }
 
         private static readonly string ConfigPath =
-            Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "prism_config.txt");
+            Path.GetFullPath(
+                Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"..\..\..\prism_config.txt")
+            );
 
         private static string BuildWorkstation(string host, int port)
         {
@@ -32,19 +36,19 @@ namespace GXUploader.Helpers
         {
             try
             {
+                PrismConfig cfg = new PrismConfig();
+
                 if (!File.Exists(ConfigPath))
-                    return new PrismConfig();
+                    return cfg;
 
                 string[] lines = File.ReadAllLines(ConfigPath);
-
-                PrismConfig cfg = new PrismConfig();
 
                 foreach (string line in lines)
                 {
                     if (string.IsNullOrWhiteSpace(line))
                         continue;
 
-                    string[] parts = line.Split('=');
+                    string[] parts = line.Split(new char[] { '=' }, 2);
 
                     if (parts.Length < 2)
                         continue;
@@ -67,18 +71,19 @@ namespace GXUploader.Helpers
                             break;
 
                         case "port":
-                            int.TryParse(value, out int port);
-                            cfg.Port = port;
+                            if (int.TryParse(value, out int port))
+                                cfg.Port = port;
                             break;
 
                         case "scantype":
-                            int.TryParse(value, out int scanType);
-                            cfg.ScanType = scanType;
+                            if (int.TryParse(value, out int scanType))
+                                cfg.ScanType = scanType;
                             break;
                     }
                 }
 
-                cfg.Workstation = BuildWorkstation(cfg.Host, cfg.Port);
+                cfg.Workstation =
+                    BuildWorkstation(cfg.Host, cfg.Port);
 
                 return cfg;
             }
@@ -92,24 +97,40 @@ namespace GXUploader.Helpers
         {
             try
             {
-                string workstation = BuildWorkstation(cfg.Host, cfg.Port);
+                string workstation =
+                    BuildWorkstation(cfg.Host, cfg.Port);
 
                 string[] lines =
                 {
+                    // MySQL
                     $"Host={cfg.Host}",
                     $"Username={cfg.Username}",
                     $"Password={cfg.Password}",
                     $"Port={cfg.Port}",
                     $"Workstation={workstation}",
-                    $"ScanType={cfg.ScanType}"
+                    $"ScanType={cfg.ScanType}",
                 };
 
                 File.WriteAllLines(ConfigPath, lines);
             }
             catch (Exception ex)
             {
-                throw new Exception("Failed to save configuration file. " + ex.Message);
+                throw new Exception(
+                    "Failed to save configuration file. " +
+                    ex.Message
+                );
             }
+        }
+
+        public static string GetMySqlConnectionString()
+        {
+            PrismConfig cfg = Load();
+
+            return
+                $"Server={cfg.Host};" +
+                $"Uid={cfg.Username};" +
+                $"Pwd={cfg.Password};" +
+                $"Port={cfg.Port};";
         }
     }
 }

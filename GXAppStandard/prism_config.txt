@@ -1,0 +1,6 @@
+Host=desktop-qd2cdlj
+Username=sysadmin
+Password=sysadmin
+Port=8080
+Workstation=desktop-qd2cdlj:8080
+ScanType=1
