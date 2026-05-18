@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 18
+VisualStudioVersion = 18.4.11612.150 stable
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GXUploader", "GXAppStandard\GXUploader.csproj", "{64F50BF1-5A1E-4706-9563-D094C109A735}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{64F50BF1-5A1E-4706-9563-D094C109A735}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{64F50BF1-5A1E-4706-9563-D094C109A735}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{64F50BF1-5A1E-4706-9563-D094C109A735}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{64F50BF1-5A1E-4706-9563-D094C109A735}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {1BAA98B2-DB4B-4471-AB2E-2C27F641EFF2}
+	EndGlobalSection
+EndGlobal
