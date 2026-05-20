@@ -4,10 +4,8 @@
     {
         private System.ComponentModel.IContainer components = null;
 
-        private Guna.UI2.WinForms.Guna2Panel pnlSettings;
-
         private System.Windows.Forms.Label lblVendorCode;
-        private Guna.UI2.WinForms.Guna2ToggleSwitch tgVendorCode;
+        private Guna.UI2.WinForms.Guna2ToggleSwitch tgUDFText;
 
         private System.Windows.Forms.Label lblVendorName;
         private Guna.UI2.WinForms.Guna2ToggleSwitch tgVendorName;
@@ -38,191 +36,143 @@
 
         private void InitializeComponent()
         {
-            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges13 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
-            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges14 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
             Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges1 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
             Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges2 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
             Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges3 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
             Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges4 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
             Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges5 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
             Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges6 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
-            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges7 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
-            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges8 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
-            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges9 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
-            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges10 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
-            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges11 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
-            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges12 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
-            pnlSettings = new Guna.UI2.WinForms.Guna2Panel();
-            lblVendorCode = new Label();
-            tgVendorCode = new Guna.UI2.WinForms.Guna2ToggleSwitch();
-            lblVendorName = new Label();
-            tgVendorName = new Guna.UI2.WinForms.Guna2ToggleSwitch();
-            lblDescription = new Label();
-            tgDescription = new Guna.UI2.WinForms.Guna2ToggleSwitch();
-            lblCost = new Label();
-            tgCost = new Guna.UI2.WinForms.Guna2ToggleSwitch();
-            lblPriceLevel = new Label();
-            tgPriceLevel = new Guna.UI2.WinForms.Guna2ToggleSwitch();
-            lblTaxCode = new Label();
-            tgTaxCode = new Guna.UI2.WinForms.Guna2ToggleSwitch();
-            pnlSettings.SuspendLayout();
+            guna2HtmlLabel1 = new Guna.UI2.WinForms.Guna2HtmlLabel();
+            header = new Guna.UI2.WinForms.Guna2HtmlLabel();
+            lblUDFText = new Label();
+            tgUDFText = new Guna.UI2.WinForms.Guna2ToggleSwitch();
+            label1 = new Label();
+            label2 = new Label();
+            tgText = new Guna.UI2.WinForms.Guna2ToggleSwitch();
+            label3 = new Label();
+            tgUDFDate = new Guna.UI2.WinForms.Guna2ToggleSwitch();
             SuspendLayout();
             // 
-            // pnlSettings
+            // guna2HtmlLabel1
             // 
-            pnlSettings.BorderRadius = 12;
-            pnlSettings.Controls.Add(lblVendorCode);
-            pnlSettings.Controls.Add(tgVendorCode);
-            pnlSettings.Controls.Add(lblVendorName);
-            pnlSettings.Controls.Add(tgVendorName);
-            pnlSettings.Controls.Add(lblDescription);
-            pnlSettings.Controls.Add(tgDescription);
-            pnlSettings.Controls.Add(lblCost);
-            pnlSettings.Controls.Add(tgCost);
-            pnlSettings.Controls.Add(lblPriceLevel);
-            pnlSettings.Controls.Add(tgPriceLevel);
-            pnlSettings.Controls.Add(lblTaxCode);
-            pnlSettings.Controls.Add(tgTaxCode);
-            pnlSettings.CustomizableEdges = customizableEdges13;
-            pnlSettings.FillColor = Color.White;
-            pnlSettings.Location = new Point(268, 45);
-            pnlSettings.Name = "pnlSettings";
-            pnlSettings.ShadowDecoration.CustomizableEdges = customizableEdges14;
-            pnlSettings.Size = new Size(500, 381);
-            pnlSettings.TabIndex = 0;
+            guna2HtmlLabel1.BackColor = Color.Transparent;
+            guna2HtmlLabel1.Font = new Font("Arial Narrow", 9.75F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            guna2HtmlLabel1.ForeColor = Color.Gray;
+            guna2HtmlLabel1.Location = new Point(258, 53);
+            guna2HtmlLabel1.Name = "guna2HtmlLabel1";
+            guna2HtmlLabel1.Size = new Size(439, 18);
+            guna2HtmlLabel1.TabIndex = 3;
+            guna2HtmlLabel1.Text = "Note: Turn ON to include this field in changes and updates. Turn OFF to exclude it.";
             // 
-            // lblVendorCode
+            // header
             // 
-            lblVendorCode.AutoSize = true;
-            lblVendorCode.Font = new Font("Segoe UI", 10F);
-            lblVendorCode.Location = new Point(19, 14);
-            lblVendorCode.Name = "lblVendorCode";
-            lblVendorCode.Size = new Size(89, 19);
-            lblVendorCode.TabIndex = 0;
-            lblVendorCode.Text = "Vendor Code";
+            header.BackColor = Color.Transparent;
+            header.Font = new Font("Segoe UI", 18F, FontStyle.Bold);
+            header.ForeColor = Color.Gray;
+            header.Location = new Point(240, 13);
+            header.Name = "header";
+            header.Size = new Size(201, 34);
+            header.TabIndex = 2;
+            header.Text = "CONFIGURATION";
             // 
-            // tgVendorCode
+            // lblUDFText
             // 
-            tgVendorCode.CheckedState.FillColor = Color.MediumSeaGreen;
-            tgVendorCode.CustomizableEdges = customizableEdges1;
-            tgVendorCode.Location = new Point(161, 14);
-            tgVendorCode.Name = "tgVendorCode";
-            tgVendorCode.ShadowDecoration.CustomizableEdges = customizableEdges2;
-            tgVendorCode.Size = new Size(45, 22);
-            tgVendorCode.TabIndex = 1;
+            lblUDFText.AutoSize = true;
+            lblUDFText.Font = new Font("Segoe UI", 10F);
+            lblUDFText.Location = new Point(241, 131);
+            lblUDFText.Name = "lblUDFText";
+            lblUDFText.Size = new Size(106, 19);
+            lblUDFText.TabIndex = 0;
+            lblUDFText.Text = "UDF Text (1-15)";
             // 
-            // lblVendorName
+            // tgUDFText
             // 
-            lblVendorName.AutoSize = true;
-            lblVendorName.Font = new Font("Segoe UI", 10F);
-            lblVendorName.Location = new Point(19, 42);
-            lblVendorName.Name = "lblVendorName";
-            lblVendorName.Size = new Size(93, 19);
-            lblVendorName.TabIndex = 2;
-            lblVendorName.Text = "Vendor Name";
+            tgUDFText.CheckedState.FillColor = Color.MediumSeaGreen;
+            tgUDFText.CustomizableEdges = customizableEdges1;
+            tgUDFText.Location = new Point(383, 131);
+            tgUDFText.Name = "tgUDFText";
+            tgUDFText.ShadowDecoration.CustomizableEdges = customizableEdges2;
+            tgUDFText.Size = new Size(45, 22);
+            tgUDFText.TabIndex = 1;
             // 
-            // tgVendorName
+            // label1
             // 
-            tgVendorName.CheckedState.FillColor = Color.MediumSeaGreen;
-            tgVendorName.CustomizableEdges = customizableEdges3;
-            tgVendorName.Location = new Point(161, 42);
-            tgVendorName.Name = "tgVendorName";
-            tgVendorName.ShadowDecoration.CustomizableEdges = customizableEdges4;
-            tgVendorName.Size = new Size(45, 22);
-            tgVendorName.TabIndex = 3;
+            label1.AutoSize = true;
+            label1.Font = new Font("Segoe UI", 12F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            label1.Location = new Point(240, 88);
+            label1.Name = "label1";
+            label1.Size = new Size(102, 21);
+            label1.TabIndex = 4;
+            label1.Text = "DATA ITEMS";
             // 
-            // lblDescription
+            // label2
             // 
-            lblDescription.AutoSize = true;
-            lblDescription.Font = new Font("Segoe UI", 10F);
-            lblDescription.Location = new Point(19, 70);
-            lblDescription.Name = "lblDescription";
-            lblDescription.Size = new Size(78, 19);
-            lblDescription.TabIndex = 4;
-            lblDescription.Text = "Description";
+            label2.AutoSize = true;
+            label2.Font = new Font("Segoe UI", 10F);
+            label2.Location = new Point(241, 159);
+            label2.Name = "label2";
+            label2.Size = new Size(80, 19);
+            label2.TabIndex = 5;
+            label2.Text = "TEXT (1-10)";
             // 
-            // tgDescription
+            // tgText
             // 
-            tgDescription.CheckedState.FillColor = Color.MediumSeaGreen;
-            tgDescription.CustomizableEdges = customizableEdges5;
-            tgDescription.Location = new Point(161, 70);
-            tgDescription.Name = "tgDescription";
-            tgDescription.ShadowDecoration.CustomizableEdges = customizableEdges6;
-            tgDescription.Size = new Size(45, 22);
-            tgDescription.TabIndex = 5;
+            tgText.CheckedState.FillColor = Color.MediumSeaGreen;
+            tgText.CustomizableEdges = customizableEdges3;
+            tgText.Location = new Point(383, 159);
+            tgText.Name = "tgText";
+            tgText.ShadowDecoration.CustomizableEdges = customizableEdges4;
+            tgText.Size = new Size(45, 22);
+            tgText.TabIndex = 6;
             // 
-            // lblCost
+            // label3
             // 
-            lblCost.AutoSize = true;
-            lblCost.Font = new Font("Segoe UI", 10F);
-            lblCost.Location = new Point(19, 98);
-            lblCost.Name = "lblCost";
-            lblCost.Size = new Size(37, 19);
-            lblCost.TabIndex = 6;
-            lblCost.Text = "Cost";
+            label3.AutoSize = true;
+            label3.Font = new Font("Segoe UI", 10F);
+            label3.Location = new Point(241, 187);
+            label3.Name = "label3";
+            label3.Size = new Size(72, 19);
+            label3.TabIndex = 7;
+            label3.Text = "DATE UDF";
             // 
-            // tgCost
+            // tgUDFDate
             // 
-            tgCost.CheckedState.FillColor = Color.MediumSeaGreen;
-            tgCost.CustomizableEdges = customizableEdges7;
-            tgCost.Location = new Point(161, 98);
-            tgCost.Name = "tgCost";
-            tgCost.ShadowDecoration.CustomizableEdges = customizableEdges8;
-            tgCost.Size = new Size(45, 22);
-            tgCost.TabIndex = 7;
-            // 
-            // lblPriceLevel
-            // 
-            lblPriceLevel.AutoSize = true;
-            lblPriceLevel.Font = new Font("Segoe UI", 10F);
-            lblPriceLevel.Location = new Point(19, 126);
-            lblPriceLevel.Name = "lblPriceLevel";
-            lblPriceLevel.Size = new Size(73, 19);
-            lblPriceLevel.TabIndex = 8;
-            lblPriceLevel.Text = "Price Level";
-            // 
-            // tgPriceLevel
-            // 
-            tgPriceLevel.CheckedState.FillColor = Color.MediumSeaGreen;
-            tgPriceLevel.CustomizableEdges = customizableEdges9;
-            tgPriceLevel.Location = new Point(161, 126);
-            tgPriceLevel.Name = "tgPriceLevel";
-            tgPriceLevel.ShadowDecoration.CustomizableEdges = customizableEdges10;
-            tgPriceLevel.Size = new Size(45, 22);
-            tgPriceLevel.TabIndex = 9;
-            // 
-            // lblTaxCode
-            // 
-            lblTaxCode.AutoSize = true;
-            lblTaxCode.Font = new Font("Segoe UI", 10F);
-            lblTaxCode.Location = new Point(19, 154);
-            lblTaxCode.Name = "lblTaxCode";
-            lblTaxCode.Size = new Size(63, 19);
-            lblTaxCode.TabIndex = 10;
-            lblTaxCode.Text = "Tax Code";
-            // 
-            // tgTaxCode
-            // 
-            tgTaxCode.CheckedState.FillColor = Color.MediumSeaGreen;
-            tgTaxCode.CustomizableEdges = customizableEdges11;
-            tgTaxCode.Location = new Point(161, 154);
-            tgTaxCode.Name = "tgTaxCode";
-            tgTaxCode.ShadowDecoration.CustomizableEdges = customizableEdges12;
-            tgTaxCode.Size = new Size(45, 22);
-            tgTaxCode.TabIndex = 11;
+            tgUDFDate.CheckedState.FillColor = Color.MediumSeaGreen;
+            tgUDFDate.CustomizableEdges = customizableEdges5;
+            tgUDFDate.Location = new Point(383, 187);
+            tgUDFDate.Name = "tgUDFDate";
+            tgUDFDate.ShadowDecoration.CustomizableEdges = customizableEdges6;
+            tgUDFDate.Size = new Size(45, 22);
+            tgUDFDate.TabIndex = 8;
             // 
             // PageConfiguration
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            Controls.Add(pnlSettings);
+            Controls.Add(label3);
+            Controls.Add(tgUDFDate);
+            Controls.Add(label2);
+            Controls.Add(tgText);
+            Controls.Add(label1);
+            Controls.Add(lblUDFText);
+            Controls.Add(guna2HtmlLabel1);
+            Controls.Add(tgUDFText);
+            Controls.Add(header);
             Name = "PageConfiguration";
             Size = new Size(800, 480);
-            pnlSettings.ResumeLayout(false);
-            pnlSettings.PerformLayout();
             ResumeLayout(false);
+            PerformLayout();
         }
 
         #endregion
+
+        private Label lblUDFText;
+        private Guna.UI2.WinForms.Guna2HtmlLabel guna2HtmlLabel1;
+        private Guna.UI2.WinForms.Guna2HtmlLabel header;
+        private Label label1;
+        private Label label2;
+        private Guna.UI2.WinForms.Guna2ToggleSwitch tgText;
+        private Label label3;
+        private Guna.UI2.WinForms.Guna2ToggleSwitch tgUDFDate;
     }
 }

@@ -1,15 +1,4 @@
-﻿// Form1.Designer.cs (FULL) — updated to:
-// Home
-// Configuration (dropdown): Database, Prism
-// Uploader (dropdown): Inventory
-//
-// NOTE: This is based on YOUR pasted Designer.cs.
-// I kept your layout (DockStyle.Top + panels), colors, sizes, padding, etc.
-// I only added the missing controls and re-ordered docking so dropdowns appear under their parent buttons.
-//
-// Paste this whole file to replace your current Form1.Designer.cs
-
-namespace GXUploader
+﻿namespace GXUploader
 {
     partial class MainForm
     {
@@ -83,6 +72,7 @@ namespace GXUploader
             btnSubInventory = new Guna.UI2.WinForms.Guna2Button();
             btnUploader = new Guna.UI2.WinForms.Guna2Button();
             pnlSubMenu1 = new Guna.UI2.WinForms.Guna2Panel();
+            btnSubPrismConfig = new Guna.UI2.WinForms.Guna2Button();
             btnSubPrism = new Guna.UI2.WinForms.Guna2Button();
             btnSubDatabase = new Guna.UI2.WinForms.Guna2Button();
             btnConfiguration = new Guna.UI2.WinForms.Guna2Button();
@@ -170,7 +160,7 @@ namespace GXUploader
             pnlSubMenuUploader.Controls.Add(btnSubInventory);
             pnlSubMenuUploader.CustomizableEdges = customizableEdges13;
             pnlSubMenuUploader.Dock = DockStyle.Top;
-            pnlSubMenuUploader.Location = new Point(10, 215);
+            pnlSubMenuUploader.Location = new Point(10, 305);
             pnlSubMenuUploader.Name = "pnlSubMenuUploader";
             pnlSubMenuUploader.Padding = new Padding(25, 0, 0, 0);
             pnlSubMenuUploader.ShadowDecoration.CustomizableEdges = customizableEdges14;
@@ -228,7 +218,7 @@ namespace GXUploader
             btnUploader.Image = (Image)resources.GetObject("btnUploader.Image");
             btnUploader.ImageAlign = HorizontalAlignment.Left;
             btnUploader.ImageSize = new Size(15, 15);
-            btnUploader.Location = new Point(10, 185);
+            btnUploader.Location = new Point(10, 275);
             btnUploader.Name = "btnUploader";
             btnUploader.ShadowDecoration.CustomizableEdges = customizableEdges16;
             btnUploader.Size = new Size(210, 30);
@@ -239,7 +229,10 @@ namespace GXUploader
             // 
             // pnlSubMenu1
             // 
+            pnlSubMenu1.AutoSize = true;
+            pnlSubMenu1.AutoSizeMode = AutoSizeMode.GrowAndShrink;
             pnlSubMenu1.BackColor = Color.Transparent;
+            pnlSubMenu1.Controls.Add(btnSubPrismConfig);
             pnlSubMenu1.Controls.Add(btnSubPrism);
             pnlSubMenu1.Controls.Add(btnSubDatabase);
             pnlSubMenu1.CustomizableEdges = customizableEdges21;
@@ -248,9 +241,38 @@ namespace GXUploader
             pnlSubMenu1.Name = "pnlSubMenu1";
             pnlSubMenu1.Padding = new Padding(25, 0, 0, 0);
             pnlSubMenu1.ShadowDecoration.CustomizableEdges = customizableEdges22;
-            pnlSubMenu1.Size = new Size(210, 0);
+            pnlSubMenu1.Size = new Size(210, 90);
             pnlSubMenu1.TabIndex = 2;
             pnlSubMenu1.Visible = false;
+            // 
+            // btnSubPrismConfig
+            // 
+            btnSubPrismConfig.BackColor = Color.Transparent;
+            btnSubPrismConfig.BorderRadius = 7;
+            btnSubPrismConfig.ButtonMode = Guna.UI2.WinForms.Enums.ButtonMode.RadioButton;
+            btnSubPrismConfig.CheckedState.FillColor = Color.BlueViolet;
+            btnSubPrismConfig.Cursor = Cursors.Hand;
+            btnSubPrismConfig.CustomizableEdges = customizableEdges17;
+            btnSubPrismConfig.DisabledState.BorderColor = Color.DarkGray;
+            btnSubPrismConfig.DisabledState.CustomBorderColor = Color.DarkGray;
+            btnSubPrismConfig.DisabledState.FillColor = Color.FromArgb(169, 169, 169);
+            btnSubPrismConfig.DisabledState.ForeColor = Color.FromArgb(141, 141, 141);
+            btnSubPrismConfig.Dock = DockStyle.Top;
+            btnSubPrismConfig.FillColor = Color.Transparent;
+            btnSubPrismConfig.Font = new Font("Segoe UI Semibold", 9F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            btnSubPrismConfig.ForeColor = Color.White;
+            btnSubPrismConfig.HoverState.FillColor = Color.MediumPurple;
+            btnSubPrismConfig.Image = Properties.Resources.turn_right;
+            btnSubPrismConfig.ImageAlign = HorizontalAlignment.Left;
+            btnSubPrismConfig.ImageSize = new Size(14, 13);
+            btnSubPrismConfig.Location = new Point(25, 60);
+            btnSubPrismConfig.Name = "btnSubPrismConfig";
+            btnSubPrismConfig.ShadowDecoration.CustomizableEdges = customizableEdges18;
+            btnSubPrismConfig.Size = new Size(185, 30);
+            btnSubPrismConfig.TabIndex = 3;
+            btnSubPrismConfig.Text = "Configurations";
+            btnSubPrismConfig.TextAlign = HorizontalAlignment.Left;
+            btnSubPrismConfig.Click += btnSubPrismConfig_Click;
             // 
             // btnSubPrism
             // 
@@ -259,7 +281,7 @@ namespace GXUploader
             btnSubPrism.ButtonMode = Guna.UI2.WinForms.Enums.ButtonMode.RadioButton;
             btnSubPrism.CheckedState.FillColor = Color.BlueViolet;
             btnSubPrism.Cursor = Cursors.Hand;
-            btnSubPrism.CustomizableEdges = customizableEdges17;
+            btnSubPrism.CustomizableEdges = customizableEdges19;
             btnSubPrism.DisabledState.BorderColor = Color.DarkGray;
             btnSubPrism.DisabledState.CustomBorderColor = Color.DarkGray;
             btnSubPrism.DisabledState.FillColor = Color.FromArgb(169, 169, 169);
@@ -274,7 +296,7 @@ namespace GXUploader
             btnSubPrism.ImageSize = new Size(14, 13);
             btnSubPrism.Location = new Point(25, 30);
             btnSubPrism.Name = "btnSubPrism";
-            btnSubPrism.ShadowDecoration.CustomizableEdges = customizableEdges18;
+            btnSubPrism.ShadowDecoration.CustomizableEdges = customizableEdges20;
             btnSubPrism.Size = new Size(185, 30);
             btnSubPrism.TabIndex = 2;
             btnSubPrism.Text = "Prism";
@@ -288,7 +310,7 @@ namespace GXUploader
             btnSubDatabase.ButtonMode = Guna.UI2.WinForms.Enums.ButtonMode.RadioButton;
             btnSubDatabase.CheckedState.FillColor = Color.BlueViolet;
             btnSubDatabase.Cursor = Cursors.Hand;
-            btnSubDatabase.CustomizableEdges = customizableEdges19;
+            btnSubDatabase.CustomizableEdges = customizableEdges17;
             btnSubDatabase.DisabledState.BorderColor = Color.DarkGray;
             btnSubDatabase.DisabledState.CustomBorderColor = Color.DarkGray;
             btnSubDatabase.DisabledState.FillColor = Color.FromArgb(169, 169, 169);
@@ -303,7 +325,7 @@ namespace GXUploader
             btnSubDatabase.ImageSize = new Size(14, 13);
             btnSubDatabase.Location = new Point(25, 0);
             btnSubDatabase.Name = "btnSubDatabase";
-            btnSubDatabase.ShadowDecoration.CustomizableEdges = customizableEdges20;
+            btnSubDatabase.ShadowDecoration.CustomizableEdges = customizableEdges18;
             btnSubDatabase.Size = new Size(185, 30);
             btnSubDatabase.TabIndex = 3;
             btnSubDatabase.Text = "Database";
@@ -410,7 +432,7 @@ namespace GXUploader
             lblVersion.Name = "lblVersion";
             lblVersion.Size = new Size(33, 15);
             lblVersion.TabIndex = 0;
-            lblVersion.Text = "v1.0.0";
+            lblVersion.Text = "v1.3.0";
             lblVersion.Click += lblVersion_Click;
             // 
             // pnlContainer
@@ -436,7 +458,6 @@ namespace GXUploader
             pnlMainContent.ShadowDecoration.CustomizableEdges = customizableEdges2;
             pnlMainContent.Size = new Size(570, 449);
             pnlMainContent.TabIndex = 3;
-            //pnlMainContent.Paint += this.pnlMainContent_Paint;
             // 
             // pnlTopBar
             // 
@@ -519,6 +540,7 @@ namespace GXUploader
             Load += MainForm_Load;
             pnlSideBar.ResumeLayout(false);
             guna2GradientPanel1.ResumeLayout(false);
+            guna2GradientPanel1.PerformLayout();
             pnlSubMenuUploader.ResumeLayout(false);
             pnlSubMenu1.ResumeLayout(false);
             pnlLogo.ResumeLayout(false);
@@ -538,23 +560,13 @@ namespace GXUploader
         private Guna.UI2.WinForms.Guna2Panel pnlLogo;
         private Guna.UI2.WinForms.Guna2HtmlLabel lblVersion;
         private Guna.UI2.WinForms.Guna2Button btnConfiguration;
-
-        // Configuration submenu panel (existing)
         private Guna.UI2.WinForms.Guna2Panel pnlSubMenu1;
-
-        // NEW: Database button
         private Guna.UI2.WinForms.Guna2Button btnSubDatabase;
-
-        // Existing Prism button
         private Guna.UI2.WinForms.Guna2Button btnSubPrism;
-
-        // Uploader main button
+        private Guna.UI2.WinForms.Guna2Button btnSubPrismConfig;
         private Guna.UI2.WinForms.Guna2Button btnUploader;
-
-        // NEW: Uploader submenu + Inventory
         private Guna.UI2.WinForms.Guna2Panel pnlSubMenuUploader;
         private Guna.UI2.WinForms.Guna2Button btnSubInventory;
-
         private Guna.UI2.WinForms.Guna2ControlBox btnClose;
         private Guna.UI2.WinForms.Guna2ControlBox btnMini;
         private Guna.UI2.WinForms.Guna2Panel pnlTopBar;

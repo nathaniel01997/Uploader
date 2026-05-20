@@ -19,16 +19,16 @@ namespace GXUploader
         private void MainForm_Load(object sender, EventArgs e)
         {
             // 🔒 LOGIN FIRST
-            using (LoginForm login = new LoginForm())
-            {
-                login.ShowDialog();
+            //using (LoginForm login = new LoginForm())
+            //{
+            //    login.ShowDialog();
 
-                if (!login.IsAuthenticated)
-                {
-                    Application.Exit();
-                    return;
-                }
-            }
+            //    if (!login.IsAuthenticated)
+            //    {
+            //        Application.Exit();
+            //        return;
+            //    }
+            //}
 
             // ✅ CONTINUE ONLY IF LOGIN SUCCESS
 
@@ -45,7 +45,7 @@ namespace GXUploader
             SetUploaderMenuStatus(false);
 
             // Load default page
-            LoadPage(new PageMain());
+            LoadPage(new PageHome());
         }
 
         // =========================
@@ -146,6 +146,18 @@ namespace GXUploader
             btnHome.Checked = false;
 
             LoadPage(new PageConfigPrism());
+        }
+
+        private void btnSubPrismConfig_Click(object sender, EventArgs e)
+        {
+            btnSubPrism.Checked = true;
+            btnSubDatabase.Checked = false;
+
+            btnConfiguration.Checked = true;
+            btnUploader.Checked = false;
+            btnHome.Checked = false;
+
+            LoadPage(new PageConfiguration());
         }
 
         private void btnSubInventory_Click(object sender, EventArgs e)

@@ -22,6 +22,7 @@ namespace GXUploader
 {
     public partial class PageInventory : UserControl
     {
+        private PageConfiguration _config;
         private string _selectedCsvPath = string.Empty;
 
         private DataTable? _displayTable;
@@ -664,15 +665,15 @@ namespace GXUploader
 
             string[] requiredColumns =
             {
-                "DCS",
-                "DEPT_NAME",
-                "DEPT_CODE",
-                "CLASS_NAME",
-                "CLASS_CODE",
-                "SUBCLASS_NAME",
-                "SUBCLASS_CODE",
-                "SBS_No."
-            };
+        "DCS",
+        "DEPT_NAME",
+        "DEPT_CODE",
+        "CLASS_NAME",
+        "CLASS_CODE",
+        "SUBCLASS_NAME",
+        "SUBCLASS_CODE",
+        "SBS_No."
+    };
 
             foreach (var col in requiredColumns)
             {
@@ -709,12 +710,10 @@ namespace GXUploader
                             dcsCode = $"{deptCode}{classCode}{subClassCode}".Trim();
 
                         dt.Rows[i]["DCS_CODE"] = dcsCode;
-                        //LogWarn($"[Row {i + 1}] Set DCS_CODE={dcsCode}");
                     }
 
                     if (string.IsNullOrWhiteSpace(dcsCode))
                     {
-                        //LogWarn($"[Row {i + 1}] No CODE available. Skipped.");
                         continue;
                     }
 
@@ -723,11 +722,11 @@ namespace GXUploader
                     // STEP 2: Lookup SID by CODE + SBS_No
                     using (var cmd = new OracleCommand(
                         @"SELECT d.sid
-                          FROM rps.subsidiary s
-                          LEFT JOIN rps.dcs d ON d.sbs_sid = s.sid
-                          WHERE d.dcs_code = :code
-                            AND s.sbs_no = :sbsno
-                          FETCH FIRST 1 ROWS ONLY",
+                  FROM rps.subsidiary s
+                  LEFT JOIN rps.dcs d ON d.sbs_sid = s.sid
+                  WHERE d.dcs_code = :code
+                    AND s.sbs_no = :sbsno
+                  FETCH FIRST 1 ROWS ONLY",
                         conn))
                     {
                         cmd.BindByName = true;
@@ -736,28 +735,30 @@ namespace GXUploader
                         cmd.Parameters.Add(":sbsno", OracleDbType.Varchar2).Value = sbsNo;
 
                         var result = cmd.ExecuteScalar();
-                        sid = (result != null) ? result.ToString().Trim() : ""; // ✅ ensure empty string if null
+                        sid = (result != null) ? result.ToString().Trim() : "";
                     }
 
-                    // Always store SID (or empty) in CSV
+                    // Store SID in CSV
                     dt.Rows[i]["DCS"] = sid;
 
-                    //if (!string.IsNullOrWhiteSpace(sid))
+                    // IF ALREADY EXISTS → SKIP CREATION
+                    if (!string.IsNullOrWhiteSpace(sid))
+                    {
                         //LogInfo($"[Row {i + 1}] [DCS] FOUND → CODE={dcsCode}, SID={sid}");
-                    //else
-                        //LogWarn($"[Row {i + 1}] [DCS] NOT FOUND → CODE={dcsCode}, DCS set to empty");
+                        continue;
+                    }
 
                     if (string.IsNullOrWhiteSpace(deptCode) &&
                         string.IsNullOrWhiteSpace(classCode) &&
                         string.IsNullOrWhiteSpace(subClassCode))
                     {
-                        //LogWarn($"[Row {i + 1}] Cannot create (no structure). Skipped.");
                         continue;
                     }
 
                     //LogWarn($"[Row {i + 1}] [DCS] NOT FOUND → Creating CODE={dcsCode}");
 
                     string subsidiarySid = PrismAuthSessionHelper.SubsidiarySid;
+
                     if (string.IsNullOrWhiteSpace(subsidiarySid))
                     {
                         await GetAuthSessionAsync();
@@ -765,6 +766,7 @@ namespace GXUploader
                     }
 
                     EnsurePrismConfigLoaded();
+
                     string workstation = (_prismCfg?.Workstation ?? "").Trim();
                     string url = $"http://{workstation}/api/backoffice/dcs";
                     string auth = await GetAuthSessionAsync();
@@ -802,7 +804,7 @@ namespace GXUploader
                     {
                         data = new[]
                         {
-                            new
+                        new
                             {
                                 originapplication = "RProPrismWeb",
                                 active = 1,
@@ -823,11 +825,14 @@ namespace GXUploader
                     string json = JsonSerializer.Serialize(payload);
 
                     using var req = new HttpRequestMessage(HttpMethod.Post, url);
+
                     req.Content = new StringContent(json, Encoding.UTF8, "application/json");
+
                     req.Headers.TryAddWithoutValidation("auth-session", auth);
                     req.Headers.TryAddWithoutValidation("Accept", "application/json, text/plain, version=2");
 
                     using var resp = await _http.SendAsync(req);
+
                     var body = await resp.Content.ReadAsStringAsync();
 
                     WriteApiPayloadResponseToDailyFile(dcsCode, json, body);
@@ -849,6 +854,7 @@ namespace GXUploader
                         conn))
                     {
                         cmd2.BindByName = true;
+
                         cmd2.Parameters.Add(":code", OracleDbType.Varchar2).Value = dcsCode;
                         cmd2.Parameters.Add(":sbsno", OracleDbType.Varchar2).Value = sbsNo;
 
@@ -858,6 +864,7 @@ namespace GXUploader
                     if (!string.IsNullOrWhiteSpace(sid))
                     {
                         dt.Rows[i]["DCS"] = sid;
+
                         //LogInfo($"[Row {i + 1}] [DCS] CREATED → CODE={dcsCode}, SID={sid}");
                     }
                 }
@@ -1066,7 +1073,6 @@ namespace GXUploader
         //        if (string.IsNullOrWhiteSpace(PrismAuthSessionHelper.SeasonSid))
         //            throw new Exception("SeasonSid is still empty. Prism session did not return seasonsid.");
 
-        //        // Refresh SBS, TAX, DCS
         //        UpdateSbssidAndTaxcodesidFromDb(_payloadTable);
         //        await UpdateDcsFromDbAsync(_payloadTable);
 
@@ -1084,90 +1090,112 @@ namespace GXUploader
         //        int processed = 0;
         //        int errorCount = 0;
 
+        //        var semaphore = new SemaphoreSlim(10); // 🔥 SPEED CONTROL (ONLY CHANGE)
+
+        //        var tasks = new List<Task>();
+
         //        foreach (var work in allWork)
         //        {
-        //            string itemCode = GetItemCodeFromWorkItem(work)?.Trim();
+        //            await semaphore.WaitAsync();
 
-        //            if (string.IsNullOrWhiteSpace(itemCode))
+        //            tasks.Add(Task.Run(async () =>
         //            {
-        //                LogWarn($"Skipping row: item code is empty. Key={work.Key}");
-        //                processed++;
-        //                continue;
-        //            }
-
-        //            // ✅ SBS from work (IMPORTANT)
-        //            string sbsNo = work.Data.InventoryItems[0].sbssid?.Trim();
-        //            if (string.IsNullOrWhiteSpace(sbsNo))
-        //            {
-        //                LogWarn($"Skipping item {itemCode}: SBS_NO is empty. Key={work.Key}");
-        //                processed++;
-        //                continue;
-        //            }
-
-        //            //LogInfo($"Checking item: {itemCode} | SBS={sbsNo} | Key={work.Key}");
-        //            //LogInfo($"Checking item: {sbsNo}");
-        //            var existing = await GetExistingItemInfoAsync(itemCode, UseUpcMode, sbsNo);
-        //            object payloadToSend;
-        //            string actionLabel;
-
-        //            if (existing == null)
-        //            {
-        //                payloadToSend = new UploadRoot
+        //                try
         //                {
-        //                    data = new List<UploadData> { work.Data }
-        //                };
-        //                actionLabel = "INSERT";
-        //            }
-        //            else if (HasItemChanges(work, existing))
-        //            {
-        //                payloadToSend = BuildUpdatePayload(work, existing);
-        //                actionLabel = "UPDATE";
-        //            }
-        //            else
-        //            {
-        //                skipped++;
-        //                processed++;
-        //                LogInfo($"SKIPPED (no changes): {itemCode} | SBS={sbsNo} | Key={work.Key}");
-        //                continue;
-        //            }
+        //                    string itemCode = GetItemCodeFromWorkItem(work)?.Trim();
 
-        //            //LogInfo($"POST {actionLabel}: {itemCode} | SBS={sbsNo}");
+        //                    if (string.IsNullOrWhiteSpace(itemCode))
+        //                    {
+        //                        int current = Interlocked.Increment(ref processed);
+        //                        LogWarn($"Progress: {current}/{allWork.Count} | Skipping row: item code empty | Key={work.Key}");
+        //                        return;
+        //                    }
 
-        //            var result = await PostInventorySaveItemsAsync(payloadToSend);
+        //                    string sbsNo = work.Data.InventoryItems[0].sbssid?.Trim();
 
-        //            WriteApiPayloadResponseToDailyFile(work.Key, result.PayloadJson, result.ResponseBody);
+        //                    if (string.IsNullOrWhiteSpace(sbsNo))
+        //                    {
+        //                        int current = Interlocked.Increment(ref processed);
+        //                        LogWarn($"Progress: {current}/{allWork.Count} | Skipping SBS empty | Item={itemCode} | Key={work.Key}");
+        //                        return;
+        //                    }
 
-        //            var apiErrors = ExtractApiErrorMessages(result.ResponseBody);
+        //                    var existing = await GetExistingItemInfoAsync(itemCode, UseUpcMode, sbsNo);
 
-        //            bool hasErrors =
-        //                result.StatusCode < 200 ||
-        //                result.StatusCode >= 300 ||
-        //                (apiErrors != null && apiErrors.Count > 0);
+        //                    object payloadToSend;
+        //                    string actionLabel;
 
-        //            if (hasErrors)
-        //            {
-        //                errorCount++;
+        //                    if (existing == null)
+        //                    {
+        //                        payloadToSend = new UploadRoot
+        //                        {
+        //                            data = new List<UploadData> { work.Data }
+        //                        };
+        //                        actionLabel = "INSERT";
+        //                    }
+        //                    else if (HasItemChanges(work, existing))
+        //                    {
+        //                        payloadToSend = BuildUpdatePayload(work, existing);
+        //                        actionLabel = "UPDATE";
+        //                    }
+        //                    else
+        //                    {
+        //                        int current = Interlocked.Increment(ref processed);
+        //                        Interlocked.Increment(ref skipped);
 
-        //                string errorMessage = (apiErrors != null && apiErrors.Count > 0)
-        //                    ? string.Join(" | ", apiErrors)
-        //                    : result.ResponseBody;
+        //                        LogInfo($"Progress: {current}/{allWork.Count} | SKIPPED (no changes) | Item={itemCode} | Key={work.Key}");
+        //                        return;
+        //                    }
 
-        //                //LogError($"[UPLOAD ERROR #{errorCount}] Item={itemCode} | SBS={sbsNo} | Error={errorMessage}");
+        //                    var result = await PostInventorySaveItemsAsync(payloadToSend);
+        //                    //WriteApiPayloadResponseToDailyFile(work.Key, result.PayloadJson, result.ResponseBody);
 
-        //                processed++;
-        //                LogInfo($"Progress: {processed}/{allWork.Count} | Errors: {errorCount}");
+        //                    var apiErrors = ExtractApiErrorMessages(result.ResponseBody);
 
-        //                continue;
-        //            }
+        //                    bool hasErrors =
+        //                        result.StatusCode < 200 ||
+        //                        result.StatusCode >= 300 ||
+        //                        (apiErrors != null && apiErrors.Count > 0);
 
-        //            if (actionLabel == "INSERT")
-        //                inserted++;
-        //            else if (actionLabel == "UPDATE")
-        //                updated++;
+        //                    if (hasErrors)
+        //                    {
+        //                        Interlocked.Increment(ref errorCount);
 
-        //            processed++;
-        //            LogInfo($"Progress: {processed}/{allWork.Count}");
+        //                        int current = Interlocked.Increment(ref processed);
+
+        //                        LogInfo($"Progress: {current}/{allWork.Count} | ERROR | Item={itemCode} | Key={work.Key}");
+        //                        return;
+        //                    }
+
+        //                    if (actionLabel == "INSERT")
+        //                        Interlocked.Increment(ref inserted);
+        //                    else if (actionLabel == "UPDATE")
+        //                        Interlocked.Increment(ref updated);
+
+        //                    int success = Interlocked.Increment(ref processed);
+
+        //                    LogInfo($"Progress: {success}/{allWork.Count} | {actionLabel} | Item={itemCode} | Key={work.Key}");
+        //                }
+        //                catch (Exception ex)
+        //                {
+        //                    Interlocked.Increment(ref errorCount);
+
+        //                    int current = Interlocked.Increment(ref processed);
+
+        //                    LogError($"Progress: {current}/{allWork.Count} | ERROR | Key={work.Key} | {ex}");
+        //                }
+        //                finally
+        //                {
+        //                    semaphore.Release();
+        //                }
+        //            }));
         //        }
+
+        //        await Task.WhenAll(tasks);
+        //        // adjustment Memo price level only 
+
+
+
 
         //        if (!stopped)
         //        {
@@ -1236,8 +1264,7 @@ namespace GXUploader
                 int processed = 0;
                 int errorCount = 0;
 
-                var semaphore = new SemaphoreSlim(10); // 🔥 SPEED CONTROL (ONLY CHANGE)
-
+                var semaphore = new SemaphoreSlim(10);
                 var tasks = new List<Task>();
 
                 foreach (var work in allWork)
@@ -1293,8 +1320,9 @@ namespace GXUploader
                                 return;
                             }
 
-                            var result = await PostInventorySaveItemsAsync(payloadToSend);
-                            WriteApiPayloadResponseToDailyFile(work.Key, result.PayloadJson, result.ResponseBody);
+                            // 🔥 FIX: prevents UI deadlock/hanging
+                            var result = await PostInventorySaveItemsAsync(payloadToSend)
+                                .ConfigureAwait(false);
 
                             var apiErrors = ExtractApiErrorMessages(result.ResponseBody);
 
@@ -1306,7 +1334,6 @@ namespace GXUploader
                             if (hasErrors)
                             {
                                 Interlocked.Increment(ref errorCount);
-
                                 int current = Interlocked.Increment(ref processed);
 
                                 LogInfo($"Progress: {current}/{allWork.Count} | ERROR | Item={itemCode} | Key={work.Key}");
@@ -1338,10 +1365,6 @@ namespace GXUploader
                 }
 
                 await Task.WhenAll(tasks);
-                // adjustment Memo price level only 
-
-
-
 
                 if (!stopped)
                 {
@@ -1364,6 +1387,7 @@ namespace GXUploader
                 btnBrowseCsv.Enabled = true;
             }
         }
+
 
         private void WriteApiPayloadResponseToDailyFile(string upcOrAlu, string payloadJson, string responseBody)
         {
@@ -1429,47 +1453,47 @@ namespace GXUploader
                     ? await resp.Content.ReadAsStringAsync().ConfigureAwait(false)
                     : string.Empty;
 
-                if (IsAuthExpiredStatus(resp))
-                {
-                    LogWarn($"Auth expired (HTTP {(int)resp.StatusCode}). Refreshing auth-session and retrying once...");
+                ////if (IsAuthExpiredStatus(resp))
+                ////{
+                //    LogWarn($"Auth expired (HTTP {(int)resp.StatusCode}). Refreshing auth-session and retrying once...");
 
-                    PrismAuthSessionHelper.ClearCache();
-                    string auth2 = await GetAuthSessionAsync(forceRefresh: true).ConfigureAwait(false);
+                //    PrismAuthSessionHelper.ClearCache();
+                //    string auth2 = await GetAuthSessionAsync(forceRefresh: true).ConfigureAwait(false);
 
-                    using var retryReq = new HttpRequestMessage(HttpMethod.Post, url);
-                    retryReq.Content = new StringContent(json, Encoding.UTF8, "application/json");
-                    retryReq.Headers.TryAddWithoutValidation("auth-session", auth2);
-                    retryReq.Headers.TryAddWithoutValidation("Accept", "application/json, text/plain, version=2");
+                //    using var retryReq = new HttpRequestMessage(HttpMethod.Post, url);
+                //    retryReq.Content = new StringContent(json, Encoding.UTF8, "application/json");
+                //    retryReq.Headers.TryAddWithoutValidation("auth-session", auth2);
+                //    retryReq.Headers.TryAddWithoutValidation("Accept", "application/json, text/plain, version=2");
 
-                    using var retryResp = await _http.SendAsync(retryReq).ConfigureAwait(false);
-                    string retryBody = retryResp.Content != null
-                        ? await retryResp.Content.ReadAsStringAsync().ConfigureAwait(false)
-                        : string.Empty;
+                //    using var retryResp = await _http.SendAsync(retryReq).ConfigureAwait(false);
+                //    string retryBody = retryResp.Content != null
+                //        ? await retryResp.Content.ReadAsStringAsync().ConfigureAwait(false)
+                //        : string.Empty;
 
-                    var retryErrors = ExtractApiErrorMessages(retryBody);
-                    string finalRetryBody = retryErrors.Count > 0
-                        ? string.Join(Environment.NewLine, retryErrors)
-                        : retryBody;
+                //    var retryErrors = ExtractApiErrorMessages(retryBody);
+                //    string finalRetryBody = retryErrors.Count > 0
+                //        ? string.Join(Environment.NewLine, retryErrors)
+                //        : retryBody;
 
-                    LogInfo($"POST {url} (retry)");
-                    LogInfo($"HTTP {(int)retryResp.StatusCode} {retryResp.ReasonPhrase}");
+                //    LogInfo($"POST {url} (retry)");
+                //    LogInfo($"HTTP {(int)retryResp.StatusCode} {retryResp.ReasonPhrase}");
 
-                    if (!retryResp.IsSuccessStatusCode)
-                    {
-                        if (!string.IsNullOrWhiteSpace(finalRetryBody))
-                            LogError(finalRetryBody);
-                        else
-                            LogError("Request failed but response body was empty.");
-                    }
+                //    if (!retryResp.IsSuccessStatusCode)
+                //    {
+                //        if (!string.IsNullOrWhiteSpace(finalRetryBody))
+                //            LogError(finalRetryBody);
+                //        else
+                //            LogError("Request failed but response body was empty.");
+                //    }
 
-                    return new ApiCallResult
-                    {
-                        PayloadJson = json,
-                        ResponseBody = finalRetryBody,
-                        StatusCode = (int)retryResp.StatusCode,
-                        ReasonPhrase = retryResp.ReasonPhrase ?? ""
-                    };
-                }
+                //    return new ApiCallResult
+                //    {
+                //        PayloadJson = json,
+                //        ResponseBody = finalRetryBody,
+                //        StatusCode = (int)retryResp.StatusCode,
+                //        ReasonPhrase = retryResp.ReasonPhrase ?? ""
+                //    };
+                ////}
 
                 var apiErrors = ExtractApiErrorMessages(rawBody);
 
@@ -2993,6 +3017,11 @@ namespace GXUploader
 
         private bool HasItemChanges(UploadWorkItem work, ExistingItemInfo existing)
         {
+            _config = new PageConfiguration();
+            bool isUDFTextEnabled = _config.IsUDFTextEnabled();
+            bool isUDFDateEnabled = _config.IsUDFDateEnabled();
+            bool isTextEnabled = _config.IsTextEnabled();
+
             if (_payloadTable == null)
                 return true;
 
@@ -3025,6 +3054,8 @@ namespace GXUploader
 
             if (UseUpcMode) Check("upc", !AreEqual(csvUpc, existing.upc), csvUpc, existing.upc);
             else Check("alu", !AreEqual(csvAlu, existing.alu), csvAlu, existing.alu);
+            
+            //vendor
             Check("vendor_code",!AreEqual(GetDT(_payloadTable, row, "VENDOR_CODE"), existing.vendor_code),GetDT(_payloadTable, row, "VENDOR_CODE"),existing.vendor_code);
             Check("vendor_name",!AreEqual(GetDT(_payloadTable, row, "VENDOR_NAME"), existing.vendor_name),GetDT(_payloadTable, row, "VENDOR_NAME"),existing.vendor_name);
 
@@ -3033,16 +3064,20 @@ namespace GXUploader
 
             //AreEqual(Convert.ToDateTime(GetDT(_payloadTable, row, "Date_UDF_1")).ToString("MM/dd/yyyy"),Convert.ToDateTime(existing.udf1date).ToString("MM/dd/yyyy"));
 
-
-            //Check("udf1date", !AreEqual(GetDT(_payloadTable, row, "Date_UDF_1"), existing.udf1date), GetDT(_payloadTable, row, "Date_UDF_1"), existing.udf1date);
-            //Check("udf2date", !AreEqual(GetDT(_payloadTable, row, "Date_UDF_2"), existing.udf2date), GetDT(_payloadTable, row, "Date_UDF_2"), existing.udf2date);
-            //Check("udf3date", !AreEqual(GetDT(_payloadTable, row, "Date_UDF_3"), existing.udf3date), GetDT(_payloadTable, row, "Date_UDF_3"), existing.udf3date);
+            if (isUDFDateEnabled)
+            {
+                Check("udf1date", !AreEqual(GetDT(_payloadTable, row, "Date_UDF_1"), existing.udf1date), GetDT(_payloadTable, row, "Date_UDF_1"), existing.udf1date);
+                Check("udf2date", !AreEqual(GetDT(_payloadTable, row, "Date_UDF_2"), existing.udf2date), GetDT(_payloadTable, row, "Date_UDF_2"), existing.udf2date);
+                Check("udf3date", !AreEqual(GetDT(_payloadTable, row, "Date_UDF_3"), existing.udf3date), GetDT(_payloadTable, row, "Date_UDF_3"), existing.udf3date);
+            }
+            
 
             //Check("lottype",!AreEqual(GetDT(_payloadTable, row, "Lot_Type"),existing.lottype?.ToString()),GetDT(_payloadTable, row, "Lot_Type"),existing.lottype?.ToString());
             //Check("serialtype", !AreEqual(GetDT(_payloadTable, row, "Serial_Type"), existing.serialtype?.ToString()), GetDT(_payloadTable, row, "Serial_Type"), existing.serialtype?.ToString());
 
             //Check("noninventory", !AreEqual(GetDT(_payloadTable, row, ",NON_INVENTORY"), existing.noninventory?.ToString()), GetDT(_payloadTable, row, ",NON_INVENTORY"), existing.noninventory?.ToString());
 
+            //item details
             Check("description1", !AreEqual(GetDT(_payloadTable, row, "DESC1"), existing.description1), GetDT(_payloadTable, row, "DESC1"), existing.description1);
             Check("description2", !AreEqual(GetDT(_payloadTable, row, "DESC2"), existing.description2), GetDT(_payloadTable, row, "DESC2"), existing.description2);
             Check("description3", !AreEqual(GetDT(_payloadTable, row, "DESC3"), existing.description3), GetDT(_payloadTable, row, "DESC3"), existing.description3);
@@ -3093,35 +3128,41 @@ namespace GXUploader
             Check("taxcodesid", !AreEqual(GetDT(_payloadTable, row, "TAXCODE_SID"), existing.taxcodesid), GetDT(_payloadTable, row, "TAXCODE_SID"), existing.taxcodesid);
             Check("dcs_code", !AreEqual(GetDT(_payloadTable, row, "DCS_CODE"), existing.dcs_code), GetDT(_payloadTable, row, "DCS_CODE"), existing.dcs_code);
 
-            Check("text1", !AreEqual(GetDT(_payloadTable, row, "TEXT1"), existing.text1), GetDT(_payloadTable, row, "TEXT1"), existing.text1);
-            Check("text2", !AreEqual(GetDT(_payloadTable, row, "TEXT2"), existing.text2), GetDT(_payloadTable, row, "TEXT2"), existing.text2);
-            Check("text3", !AreEqual(GetDT(_payloadTable, row, "TEXT3"), existing.text3), GetDT(_payloadTable, row, "TEXT3"), existing.text3);
-            Check("text4", !AreEqual(GetDT(_payloadTable, row, "TEXT4"), existing.text4), GetDT(_payloadTable, row, "TEXT4"), existing.text4);
-            Check("text5", !AreEqual(GetDT(_payloadTable, row, "TEXT5"), existing.text5), GetDT(_payloadTable, row, "TEXT5"), existing.text5);
-            Check("text6", !AreEqual(GetDT(_payloadTable, row, "TEXT6"), existing.text6), GetDT(_payloadTable, row, "TEXT6"), existing.text6);
-            Check("text7", !AreEqual(GetDT(_payloadTable, row, "TEXT7"), existing.text7), GetDT(_payloadTable, row, "TEXT7"), existing.text7);
-            Check("text8", !AreEqual(GetDT(_payloadTable, row, "TEXT8"), existing.text8), GetDT(_payloadTable, row, "TEXT8"), existing.text8);
-            Check("text9", !AreEqual(GetDT(_payloadTable, row, "TEXT9"), existing.text9), GetDT(_payloadTable, row, "TEXT9"), existing.text9);
-            Check("text10", !AreEqual(GetDT(_payloadTable, row, "TEXT10"), existing.text10), GetDT(_payloadTable, row, "TEXT10"), existing.text10);
+            if (isUDFTextEnabled)
+            {
+                Check("text1", !AreEqual(GetDT(_payloadTable, row, "TEXT1"), existing.text1), GetDT(_payloadTable, row, "TEXT1"), existing.text1);
+                Check("text2", !AreEqual(GetDT(_payloadTable, row, "TEXT2"), existing.text2), GetDT(_payloadTable, row, "TEXT2"), existing.text2);
+                Check("text3", !AreEqual(GetDT(_payloadTable, row, "TEXT3"), existing.text3), GetDT(_payloadTable, row, "TEXT3"), existing.text3);
+                Check("text4", !AreEqual(GetDT(_payloadTable, row, "TEXT4"), existing.text4), GetDT(_payloadTable, row, "TEXT4"), existing.text4);
+                Check("text5", !AreEqual(GetDT(_payloadTable, row, "TEXT5"), existing.text5), GetDT(_payloadTable, row, "TEXT5"), existing.text5);
+                Check("text6", !AreEqual(GetDT(_payloadTable, row, "TEXT6"), existing.text6), GetDT(_payloadTable, row, "TEXT6"), existing.text6);
+                Check("text7", !AreEqual(GetDT(_payloadTable, row, "TEXT7"), existing.text7), GetDT(_payloadTable, row, "TEXT7"), existing.text7);
+                Check("text8", !AreEqual(GetDT(_payloadTable, row, "TEXT8"), existing.text8), GetDT(_payloadTable, row, "TEXT8"), existing.text8);
+                Check("text9", !AreEqual(GetDT(_payloadTable, row, "TEXT9"), existing.text9), GetDT(_payloadTable, row, "TEXT9"), existing.text9);
+                Check("text10", !AreEqual(GetDT(_payloadTable, row, "TEXT10"), existing.text10), GetDT(_payloadTable, row, "TEXT10"), existing.text10);
+            }
 
-            //Check("udf1_string", !AreEqual(GetDT(_payloadTable, row, "TEXT_UDF1"), existing.udf1_string), GetDT(_payloadTable, row, "TEXT_UDF1"), existing.udf1_string);
-            //Check("udf2_string", !AreEqual(GetDT(_payloadTable, row, "TEXT_UDF2"), existing.udf2_string), GetDT(_payloadTable, row, "TEXT_UDF2"), existing.udf2_string);
-            //Check("udf3_string", !AreEqual(GetDT(_payloadTable, row, "TEXT_UDF3"), existing.udf3_string), GetDT(_payloadTable, row, "TEXT_UDF3"), existing.udf3_string);
-            //Check("udf4_string", !AreEqual(GetDT(_payloadTable, row, "TEXT_UDF4"), existing.udf4_string), GetDT(_payloadTable, row, "TEXT_UDF4"), existing.udf4_string);
-            //Check("udf5_string", !AreEqual(GetDT(_payloadTable, row, "TEXT_UDF5"), existing.udf5_string), GetDT(_payloadTable, row, "TEXT_UDF5"), existing.udf5_string);
+            //udf fields
+            if (isUDFTextEnabled)
+            {
+                Check("udf1_string", !AreEqual(GetDT(_payloadTable, row, "TEXT_UDF1"), existing.udf1_string), GetDT(_payloadTable, row, "TEXT_UDF1"), existing.udf1_string);
+                Check("udf2_string", !AreEqual(GetDT(_payloadTable, row, "TEXT_UDF2"), existing.udf2_string), GetDT(_payloadTable, row, "TEXT_UDF2"), existing.udf2_string);
+                Check("udf3_string", !AreEqual(GetDT(_payloadTable, row, "TEXT_UDF3"), existing.udf3_string), GetDT(_payloadTable, row, "TEXT_UDF3"), existing.udf3_string);
+                Check("udf4_string", !AreEqual(GetDT(_payloadTable, row, "TEXT_UDF4"), existing.udf4_string), GetDT(_payloadTable, row, "TEXT_UDF4"), existing.udf4_string);
+                Check("udf5_string", !AreEqual(GetDT(_payloadTable, row, "TEXT_UDF5"), existing.udf5_string), GetDT(_payloadTable, row, "TEXT_UDF5"), existing.udf5_string);
 
 
-            //Check("udf6_string", !AreEqual(GetDT(_payloadTable, row, "TEXT_UDF6"), existing.udf6_string), GetDT(_payloadTable, row, "TEXT_UDF6"), existing.udf6_string);
-            //Check("udf7_string", !AreEqual(GetDT(_payloadTable, row, "TEXT_UDF7"), existing.udf7_string), GetDT(_payloadTable, row, "TEXT_UDF7"), existing.udf7_string);
-            //Check("udf8_string", !AreEqual(GetDT(_payloadTable, row, "TEXT_UDF8"), existing.udf8_string), GetDT(_payloadTable, row, "TEXT_UDF8"), existing.udf8_string);
-            //Check("udf9_string", !AreEqual(GetDT(_payloadTable, row, "TEXT_UDF9"), existing.udf9_string), GetDT(_payloadTable, row, "TEXT_UDF9"), existing.udf9_string);
-            //Check("udf10_string", !AreEqual(GetDT(_payloadTable, row, "TEXT_UDF10"), existing.udf10_string), GetDT(_payloadTable, row, "TEXT_UDF10"), existing.udf10_string);
-            //Check("udf11_string", !AreEqual(GetDT(_payloadTable, row, "TEXT_UDF11"), existing.udf11_string), GetDT(_payloadTable, row, "TEXT_UDF11"), existing.udf11_string);
-            //Check("udf12_string", !AreEqual(GetDT(_payloadTable, row, "TEXT_UDF12"), existing.udf12_string), GetDT(_payloadTable, row, "TEXT_UDF12"), existing.udf12_string);
-            //Check("udf13_string", !AreEqual(GetDT(_payloadTable, row, "TEXT_UDF13"), existing.udf13_string), GetDT(_payloadTable, row, "TEXT_UDF13"), existing.udf13_string);
-            //Check("udf14_string", !AreEqual(GetDT(_payloadTable, row, "TEXT_UDF14"), existing.udf14_string), GetDT(_payloadTable, row, "TEXT_UDF14"), existing.udf14_string);
-            //Check("udf15_string", !AreEqual(GetDT(_payloadTable, row, "TEXT_UDF15"), existing.udf15_string), GetDT(_payloadTable, row, "TEXT_UDF15"), existing.udf15_string);
-
+                Check("udf6_string", !AreEqual(GetDT(_payloadTable, row, "TEXT_UDF6"), existing.udf6_string), GetDT(_payloadTable, row, "TEXT_UDF6"), existing.udf6_string);
+                Check("udf7_string", !AreEqual(GetDT(_payloadTable, row, "TEXT_UDF7"), existing.udf7_string), GetDT(_payloadTable, row, "TEXT_UDF7"), existing.udf7_string);
+                Check("udf8_string", !AreEqual(GetDT(_payloadTable, row, "TEXT_UDF8"), existing.udf8_string), GetDT(_payloadTable, row, "TEXT_UDF8"), existing.udf8_string);
+                Check("udf9_string", !AreEqual(GetDT(_payloadTable, row, "TEXT_UDF9"), existing.udf9_string), GetDT(_payloadTable, row, "TEXT_UDF9"), existing.udf9_string);
+                Check("udf10_string", !AreEqual(GetDT(_payloadTable, row, "TEXT_UDF10"), existing.udf10_string), GetDT(_payloadTable, row, "TEXT_UDF10"), existing.udf10_string);
+                Check("udf11_string", !AreEqual(GetDT(_payloadTable, row, "TEXT_UDF11"), existing.udf11_string), GetDT(_payloadTable, row, "TEXT_UDF11"), existing.udf11_string);
+                Check("udf12_string", !AreEqual(GetDT(_payloadTable, row, "TEXT_UDF12"), existing.udf12_string), GetDT(_payloadTable, row, "TEXT_UDF12"), existing.udf12_string);
+                Check("udf13_string", !AreEqual(GetDT(_payloadTable, row, "TEXT_UDF13"), existing.udf13_string), GetDT(_payloadTable, row, "TEXT_UDF13"), existing.udf13_string);
+                Check("udf14_string", !AreEqual(GetDT(_payloadTable, row, "TEXT_UDF14"), existing.udf14_string), GetDT(_payloadTable, row, "TEXT_UDF14"), existing.udf14_string);
+                Check("udf15_string", !AreEqual(GetDT(_payloadTable, row, "TEXT_UDF15"), existing.udf15_string), GetDT(_payloadTable, row, "TEXT_UDF15"), existing.udf15_string);
+            }
             return changed;
         }
 
