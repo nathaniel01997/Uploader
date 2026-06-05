@@ -79,7 +79,6 @@
             this.btnCancel.Size = new System.Drawing.Size(110, 30);
             this.btnCancel.Text = "Cancel";
             this.btnCancel.UseVisualStyleBackColor = true;
-            this.btnCancel.Click += new System.EventHandler(this.btnCancel_Click);
 
             // LoginForm
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);

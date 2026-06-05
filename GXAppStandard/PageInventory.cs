@@ -2397,6 +2397,7 @@ namespace GXUploader
                 i.description3,
                 i.description4,
                 i.attribute,
+                i.item_size,
                 i.cost,
                 i.serial_type AS serialtype,
                 i.lot_type AS lottype,
@@ -2599,6 +2600,7 @@ namespace GXUploader
                 description4 = DbToString(reader, "description4"),
 
                 attribute = DbToString(reader, "attribute"),
+                item_size = DbToString(reader, "item_size"),
                 cost = DbToDecimal(reader, "cost"),
 
                 taxcodesid = DbToString(reader, "taxcodesid"),
@@ -3058,6 +3060,8 @@ namespace GXUploader
             //vendor
             Check("vendor_code",!AreEqual(GetDT(_payloadTable, row, "VENDOR_CODE"), existing.vendor_code),GetDT(_payloadTable, row, "VENDOR_CODE"),existing.vendor_code);
             Check("vendor_name",!AreEqual(GetDT(_payloadTable, row, "VENDOR_NAME"), existing.vendor_name),GetDT(_payloadTable, row, "VENDOR_NAME"),existing.vendor_name);
+
+            Check("item_size", !AreEqual(GetDT(_payloadTable, row, "SIZE"), existing.item_size), GetDT(_payloadTable, row, "SIZE"), existing.item_size);
 
             //var csvDate = Convert.ToDateTime(GetDT(_payloadTable, row, "Date_UDF_1")).Date;
             var dbDate = Convert.ToDateTime(existing.udf1date).Date;

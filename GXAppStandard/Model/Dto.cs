@@ -375,6 +375,8 @@ namespace GXUploader.Dtos
         public string? description4 { get; set; }
 
         public string? attribute { get; set; }
+
+        public string? item_size { get; set; }
         public decimal? cost { get; set; }
 
         public string? taxcodesid { get; set; }

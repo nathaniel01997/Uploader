@@ -1,4 +1,6 @@
+using GXUploader.Model;
 using System;
+using System.Text.Json;
 using System.Windows.Forms;
 
 namespace GXUploader
@@ -18,17 +20,16 @@ namespace GXUploader
 
         private void MainForm_Load(object sender, EventArgs e)
         {
-            // 🔒 LOGIN FIRST
-            //using (LoginForm login = new LoginForm())
-            //{
-            //    login.ShowDialog();
+            using (LoginForm login = new LoginForm())
+            {
+                login.ShowDialog();
 
-            //    if (!login.IsAuthenticated)
-            //    {
-            //        Application.Exit();
-            //        return;
-            //    }
-            //}
+                if (!login.IsAuthenticated)
+                {
+                    Application.Exit();
+                    return;
+                }
+            }
 
             // ✅ CONTINUE ONLY IF LOGIN SUCCESS
 
