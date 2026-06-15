@@ -1,6 +1,10 @@
-﻿using GXUploader.Model;
+﻿using GXUploader.Helper;
+using GXUploader.Helpers;
+using GXUploader.Model;
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text.Json;
 using System.Windows.Forms;
 
@@ -11,12 +15,12 @@ namespace GXUploader
         private TextBox txtLicenseKey;
         private Button btnActivate;
 
-        private string basePath =
-            @"C:\Users\JohnDave\Desktop\LicenseGenerator\LicenseGenerator\bin\Release\net8.0\win-x64";
-
         public LicenseForm()
         {
             InitializeComponent();
+
+            _ = LicensingPath.BasePath;
+
             BuildUI();
         }
 
@@ -52,34 +56,53 @@ namespace GXUploader
         {
             string key = txtLicenseKey.Text.Trim();
 
-            if (string.IsNullOrEmpty(key))
+            if (string.IsNullOrWhiteSpace(key))
             {
-                MessageBox.Show("Enter license key.");
+                MessageBox.Show(
+                    "Enter a license key.",
+                    "Activation",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+
                 return;
             }
 
             try
             {
-                string logPath = Path.Combine(basePath, "license_logs.json");
+                string logPath = Path.Combine(
+                    LicensingPath.BasePath,
+                    "license_logs.json");
 
                 if (!File.Exists(logPath))
                 {
-                    MessageBox.Show("License database not found.");
+                    MessageBox.Show(
+                        "License database not found.",
+                        "Activation Failed",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Error);
+
                     return;
                 }
 
-                // 🔥 READ LICENSE DATABASE
                 var licenses = JsonSerializer.Deserialize<List<LicenseLog>>(
                     File.ReadAllText(logPath));
 
-                if (licenses == null || licenses.Count == 0)
+                if (licenses == null || !licenses.Any())
                 {
-                    MessageBox.Show("Invalid license database.");
+                    MessageBox.Show(
+                        "Invalid license database.",
+                        "Activation Failed",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Error);
+
                     return;
                 }
 
-                // 🔥 CHECK IF KEY EXISTS
-                var match = licenses.FirstOrDefault(x => x.LicenseKey == key);
+                var match = licenses.FirstOrDefault(x =>
+                    string.Equals(
+                        x.LicenseKey,
+                        key,
+                        StringComparison.OrdinalIgnoreCase));
 
                 if (match == null)
                 {
@@ -92,14 +115,13 @@ namespace GXUploader
                     return;
                 }
 
-                // 🔥 CHECK EXPIRY BEFORE SAVING
-                DateTime now = DateTime.UtcNow.Date;
+                DateTime today = DateTime.UtcNow.Date;
                 DateTime expiry = match.Expiry.Date;
 
-                if (expiry == now)
+                if (expiry < today)
                 {
                     MessageBox.Show(
-                        "This license is already expired.",
+                        "This license has already expired.",
                         "Activation Failed",
                         MessageBoxButtons.OK,
                         MessageBoxIcon.Error);
@@ -107,8 +129,9 @@ namespace GXUploader
                     return;
                 }
 
-                // ✔ SAVE LICENSE KEY (VALID ONLY)
-                string savePath = Path.Combine(basePath, "license_key.json");
+                string savePath = Path.Combine(
+                    LicensingPath.BasePath,
+                    "license_key.json");
 
                 var data = new
                 {
@@ -116,30 +139,44 @@ namespace GXUploader
                     ActivatedDate = DateTime.UtcNow
                 };
 
-                File.WriteAllText(savePath,
-                    JsonSerializer.Serialize(data, new JsonSerializerOptions { WriteIndented = true }));
+                File.WriteAllText(
+                    savePath,
+                    JsonSerializer.Serialize(
+                        data,
+                        new JsonSerializerOptions
+                        {
+                            WriteIndented = true
+                        }));
 
-                // ⚠ WARNING MESSAGE (OPTIONAL)
-                int daysLeft = (expiry - now).Days;
+                int daysLeft = (expiry - today).Days;
 
-                if (daysLeft >= 7)
+                if (daysLeft <= 7)
                 {
                     MessageBox.Show(
-                        "License activated but will expire in " + daysLeft + " day(s).",
-                        "Warning",
+                        $"License activated successfully.\n\nWarning: License will expire in {daysLeft} day(s).",
+                        "License Warning",
                         MessageBoxButtons.OK,
                         MessageBoxIcon.Warning);
                 }
                 else
                 {
-                    MessageBox.Show("License activated successfully!");
+                    MessageBox.Show(
+                        $"License activated successfully.\n\nDays remaining: {daysLeft}",
+                        "Activation Successful",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Information);
                 }
 
+                this.DialogResult = DialogResult.OK;
                 this.Close();
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Activation error: " + ex.Message);
+                MessageBox.Show(
+                    $"Activation error:\n\n{ex.Message}",
+                    "Activation Failed",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
             }
         }
     }

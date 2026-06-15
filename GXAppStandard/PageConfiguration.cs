@@ -23,14 +23,17 @@ namespace GXUploader
             {
                 { "UDFText", tgUDFText },
                 { "UDFDate", tgUDFDate },
-                { "Text", tgText }
+                { "Text", tgText },
+                { "VendorName",tgVendorName },
+                { "DCS", tgDCS }
             };
 
             // attach event AFTER dictionary setup
             tgUDFText.CheckedChanged += ToggleChanged;
             tgUDFDate.CheckedChanged += ToggleChanged;
             tgText.CheckedChanged += ToggleChanged;
-
+            tgVendorName.CheckedChanged += ToggleChanged;
+            tgDCS.CheckedChanged += ToggleChanged;
             LoadToggleState();
         }
 
@@ -135,6 +138,16 @@ namespace GXUploader
 
         }
 
+        private void tgVendorName_CheckChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void tgDCS_CheckChanged(object sender, EventArgs e)
+        {
+
+        }
+
         public bool IsUDFTextEnabled()
         {
             var prop = tgUDFText.GetType().GetProperty("Checked");
@@ -158,6 +171,24 @@ namespace GXUploader
             var prop = tgUDFDate.GetType().GetProperty("Checked");
             if (prop != null)
                 return (bool)prop.GetValue(tgUDFDate);
+
+            return false;
+        }
+
+        public bool IsVendorNameEnabled()
+        {
+            var prop = tgVendorName.GetType().GetProperty("Checked");
+            if (prop != null)
+                return (bool)prop.GetValue(tgVendorName);
+
+            return false;
+        }
+
+        public bool IsDCSEnabled()
+        {
+            var prop = tgDCS.GetType().GetProperty("Checked");
+            if (prop != null)
+                return (bool)prop.GetValue(tgDCS);
 
             return false;
         }

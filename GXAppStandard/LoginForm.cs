@@ -10,9 +10,6 @@ namespace GXUploader
     {
         public bool IsAuthenticated { get; private set; } = false;
 
-        private string basePath =
-            @"C:\Users\JohnDave\Desktop\LicenseGenerator\LicenseGenerator\bin\Release\net8.0\win-x64";
-
         public string LoggedInUsername { get; private set; }
 
         public LoginForm()
@@ -82,60 +79,108 @@ namespace GXUploader
         {
             try
             {
-                string keyPath = Path.Combine(basePath, "license_key.json");
-                string logPath = Path.Combine(basePath, "license_logs.json");
+                string keyPath = Path.Combine(LicensingPath.BasePath, "license_key.json");
+                string logPath = Path.Combine(LicensingPath.BasePath, "license_logs.json");
 
                 if (!File.Exists(keyPath))
                 {
-                    MessageBox.Show("License not found.");
+                    MessageBox.Show(
+                        "License key file not found.",
+                        "License Error",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Error);
+
+                    return false;
+                }
+
+                if (!File.Exists(logPath))
+                {
+                    MessageBox.Show(
+                        "License log file not found.",
+                        "License Error",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Error);
+
                     return false;
                 }
 
                 var keyData = JsonSerializer.Deserialize<Dictionary<string, string>>(
                     File.ReadAllText(keyPath));
 
-                string inputKey = keyData["LicenseKey"];
+                if (keyData == null ||
+                    !keyData.TryGetValue("LicenseKey", out string inputKey))
+                {
+                    MessageBox.Show(
+                        "Invalid license key file.",
+                        "License Error",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Error);
+
+                    return false;
+                }
 
                 var licenses = JsonSerializer.Deserialize<List<LicenseLog>>(
                     File.ReadAllText(logPath));
+
+                if (licenses == null || !licenses.Any())
+                {
+                    MessageBox.Show(
+                        "No license records found.",
+                        "License Error",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Error);
+
+                    return false;
+                }
 
                 var match = licenses.FirstOrDefault(x => x.LicenseKey == inputKey);
 
                 if (match == null)
                 {
-                    MessageBox.Show("Invalid license key.");
+                    MessageBox.Show(
+                        "Invalid license key.",
+                        "License Error",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Error);
+
                     return false;
                 }
 
-                DateTime now = DateTime.UtcNow.Date;
+                DateTime today = DateTime.UtcNow.Date;
                 DateTime expiry = match.Expiry.Date;
 
-                int daysLeft = (expiry - now).Days;
+                int daysLeft = (expiry - today).Days;
 
                 if (daysLeft < 0)
                 {
                     MessageBox.Show(
-                    $"Your license was expired {daysLeft} day(s) ago.",
-                    "License Expired",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Error);
+                        $"Your license expired {Math.Abs(daysLeft)} day(s) ago.",
+                        "License Expired",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Error);
+
                     return false;
                 }
 
                 if (daysLeft <= 7)
                 {
                     MessageBox.Show(
-                    $"Your license is about to expired {daysLeft} day(s) remaining.",
-                    "License About to Expired",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Error);
+                        $"Your license will expire in {daysLeft} day(s).",
+                        "License Warning",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Warning);
                 }
 
                 return true;
             }
             catch (Exception ex)
             {
-                MessageBox.Show("License error: " + ex.Message);
+                MessageBox.Show(
+                    $"License validation failed.\n\n{ex.Message}",
+                    "License Error",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+
                 return false;
             }
         }

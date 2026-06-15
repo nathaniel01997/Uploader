@@ -627,12 +627,12 @@ namespace GXUploader
                             row["VENDOR_SID"] = sid;
                             //LogInfo($"[Row {i + 1}] Vendor created → Code={vendCode}, SID={sid}");
 
-                            WriteApiPayloadResponseToDailyFile(vendCode, payloadJson, $"CREATED SID={sid}");
+                            //WriteApiPayloadResponseToDailyFile(vendCode, payloadJson, $"CREATED SID={sid}");
                         }
                         else
                         {
                             //LogError($"[Row {i + 1}] Vendor creation failed → Code={vendCode}");
-                            WriteApiPayloadResponseToDailyFile(vendCode, payloadJson, "CREATION FAILED");
+                            //WriteApiPayloadResponseToDailyFile(vendCode, payloadJson, "CREATION FAILED");
                         }
                     }
                     else
@@ -1453,54 +1453,12 @@ namespace GXUploader
                     ? await resp.Content.ReadAsStringAsync().ConfigureAwait(false)
                     : string.Empty;
 
-                ////if (IsAuthExpiredStatus(resp))
-                ////{
-                //    LogWarn($"Auth expired (HTTP {(int)resp.StatusCode}). Refreshing auth-session and retrying once...");
-
-                //    PrismAuthSessionHelper.ClearCache();
-                //    string auth2 = await GetAuthSessionAsync(forceRefresh: true).ConfigureAwait(false);
-
-                //    using var retryReq = new HttpRequestMessage(HttpMethod.Post, url);
-                //    retryReq.Content = new StringContent(json, Encoding.UTF8, "application/json");
-                //    retryReq.Headers.TryAddWithoutValidation("auth-session", auth2);
-                //    retryReq.Headers.TryAddWithoutValidation("Accept", "application/json, text/plain, version=2");
-
-                //    using var retryResp = await _http.SendAsync(retryReq).ConfigureAwait(false);
-                //    string retryBody = retryResp.Content != null
-                //        ? await retryResp.Content.ReadAsStringAsync().ConfigureAwait(false)
-                //        : string.Empty;
-
-                //    var retryErrors = ExtractApiErrorMessages(retryBody);
-                //    string finalRetryBody = retryErrors.Count > 0
-                //        ? string.Join(Environment.NewLine, retryErrors)
-                //        : retryBody;
-
-                //    LogInfo($"POST {url} (retry)");
-                //    LogInfo($"HTTP {(int)retryResp.StatusCode} {retryResp.ReasonPhrase}");
-
-                //    if (!retryResp.IsSuccessStatusCode)
-                //    {
-                //        if (!string.IsNullOrWhiteSpace(finalRetryBody))
-                //            LogError(finalRetryBody);
-                //        else
-                //            LogError("Request failed but response body was empty.");
-                //    }
-
-                //    return new ApiCallResult
-                //    {
-                //        PayloadJson = json,
-                //        ResponseBody = finalRetryBody,
-                //        StatusCode = (int)retryResp.StatusCode,
-                //        ReasonPhrase = retryResp.ReasonPhrase ?? ""
-                //    };
-                ////}
-
                 var apiErrors = ExtractApiErrorMessages(rawBody);
 
                 string finalBody = apiErrors.Count > 0
                     ? string.Join(Environment.NewLine, apiErrors)
                     : rawBody;
-
+                //WriteApiPayloadResponseToDailyFile(vendCode, payloadJson, "CREATION FAILED");  //payloadapi
                 LogInfo($"POST {url}");
                 LogInfo($"HTTP {(int)resp.StatusCode} {resp.ReasonPhrase}");
 
@@ -2708,74 +2666,13 @@ namespace GXUploader
 
             var itemSid = NullIfWhiteSpace(existing.sid) ?? "";
 
-            //LogInfo($"[UPDATE][{work.Key}] SBSSID={sourceInv.sbssid}, TAXCODE={sourceInv.taxcodesid}, DCSCODE={sourceInv.dcscode}");
-
-            //var updateItem = new UpdateInventoryItem
-            //{
-            //    sid = itemSid,
-            //    sbssid = NullIfWhiteSpace(sourceInv.sbssid) ?? "",
-            //    dcscode = sourceInv.dcscode,
-            //    dcssid = sourceInv.dcssid,
-            //    description1 = EmptyIfNull(sourcePrimary.description1),
-            //    description2 = EmptyIfNull(sourcePrimary.description2),
-            //    description3 = EmptyIfNull(sourceInv.description3),
-            //    description4 = EmptyIfNull(sourceInv.description4),
-
-            //    taxcodesid = EmptyIfNull(sourceInv.taxcodesid),
-            //    cost = sourceInv.cost > 0 ? sourceInv.cost : 0,
-
-            //    text1 = EmptyIfNull(sourceInv.text1),
-            //    text2 = EmptyIfNull(sourceInv.text2),
-            //    text3 = EmptyIfNull(sourceInv.text3),
-            //    text4 = EmptyIfNull(sourceInv.text4),
-            //    text5 = EmptyIfNull(sourceInv.text5),
-            //    text6 = EmptyIfNull(sourceInv.text6),
-            //    text7 = EmptyIfNull(sourceInv.text7),
-            //    text8 = EmptyIfNull(sourceInv.text8),
-            //    text9 = EmptyIfNull(sourceInv.text9),
-            //    text10 = EmptyIfNull(sourceInv.text10),
-
-            //    attribute = EmptyIfNull(sourcePrimary.attribute),
-            //    itemsize = EmptyIfNull(sourcePrimary.itemsize),
-
-            //    lottype = sourceInv.lottype,
-            //    serialtype = sourceInv.serialtype,
-            //    noninventory = sourceInv.noninventory,
-
-            //    udf1string = EmptyIfNull(sourceInv.udf1string),
-            //    udf2string = EmptyIfNull(sourceInv.udf2string),
-            //    udf3string = EmptyIfNull(sourceInv.udf3string),
-            //    udf4string = EmptyIfNull(sourceInv.udf4string),
-            //    udf5string = EmptyIfNull(sourceInv.udf5string),
-
-            //    upc = UseUpcMode ? NullIfWhiteSpace(sourceInv.upc) : null,
-            //    alu = UseUpcMode ? null : NullIfWhiteSpace(sourceInv.alu),
-
-            //    kittype = sourceInv.kittype,
-            //    ltypriceinpoints = sourceInv.ltypriceinpoints,
-            //    ltypointsearned = sourceInv.ltypointsearned,
-
-            //    activestoresid = NullIfWhiteSpace(sourceInv.activestoresid),
-            //    activepricelevelsid = NullIfWhiteSpace(sourceInv.activepricelevelsid),
-            //    activeseasonsid = seasonSid,
-
-            //    actstrpricewt = sourceInv.actstrpricewt,
-            //    spif = sourceInv.spif,
-
-            //    udf1date = sourceInv.udf1date,
-            //    udf2date = sourceInv.udf2date,
-            //    udf3date = sourceInv.udf3date,
-
-            //    invnprice = new List<UpdateInvnPrice>(),
-            //    invnextend = new List<UpdateInvnExtend>()
-            //};
-
             var updateItem = new UpdateInventoryItem
             {
                 sid = itemSid,
                 sbssid = NullIfWhiteSpace(sourceInv.sbssid),
                 dcscode = NullIfWhiteSpace(sourceInv.dcscode),
                 dcssid = NullIfWhiteSpace(sourceInv.dcssid),
+                vendsid = NullIfWhiteSpace(sourceInv.vendsid),
 
                 description1 = NullIfWhiteSpace(sourcePrimary.description1),
                 description2 = NullIfWhiteSpace(sourcePrimary.description2),
@@ -3023,6 +2920,8 @@ namespace GXUploader
             bool isUDFTextEnabled = _config.IsUDFTextEnabled();
             bool isUDFDateEnabled = _config.IsUDFDateEnabled();
             bool isTextEnabled = _config.IsTextEnabled();
+            bool isVendorNameEnabled = _config.IsVendorNameEnabled();
+            bool isDCSEnabled = _config.IsDCSEnabled();
 
             if (_payloadTable == null)
                 return true;
@@ -3048,7 +2947,7 @@ namespace GXUploader
                 if (!diff) return;
 
                 changed = true;
-                LogWarn($"CHANGE DETECTED [{work.Key}] Field={field} | CSV='{DisplayCompareValue(csvValue)}' | DB='{DisplayCompareValue(dbValue)}'");
+                LogWarn($"CHANGE DETECTED [{work.Key}] Field={field} | CSV= {DisplayCompareValue(csvValue)} | DB= {DisplayCompareValue(dbValue)} ");
             }
 
             string csvAlu = GetDT(_payloadTable, row, "ALU");
@@ -3056,11 +2955,14 @@ namespace GXUploader
 
             if (UseUpcMode) Check("upc", !AreEqual(csvUpc, existing.upc), csvUpc, existing.upc);
             else Check("alu", !AreEqual(csvAlu, existing.alu), csvAlu, existing.alu);
-            
-            //vendor
-            Check("vendor_code",!AreEqual(GetDT(_payloadTable, row, "VENDOR_CODE"), existing.vendor_code),GetDT(_payloadTable, row, "VENDOR_CODE"),existing.vendor_code);
-            Check("vendor_name",!AreEqual(GetDT(_payloadTable, row, "VENDOR_NAME"), existing.vendor_name),GetDT(_payloadTable, row, "VENDOR_NAME"),existing.vendor_name);
 
+            //vendor
+            if (isVendorNameEnabled)
+            {
+                Check("vendor_code",!AreEqual(GetDT(_payloadTable, row, "VENDOR_CODE"), existing.vendor_code),GetDT(_payloadTable, row, "VENDOR_CODE"),existing.vendor_code);
+                Check("vendor_name",!AreEqual(GetDT(_payloadTable, row, "VENDOR_NAME"), existing.vendor_name),GetDT(_payloadTable, row, "VENDOR_NAME"),existing.vendor_name);
+            }
+            
             Check("item_size", !AreEqual(GetDT(_payloadTable, row, "SIZE"), existing.item_size), GetDT(_payloadTable, row, "SIZE"), existing.item_size);
 
             //var csvDate = Convert.ToDateTime(GetDT(_payloadTable, row, "Date_UDF_1")).Date;
@@ -3130,7 +3032,11 @@ namespace GXUploader
             }
 
             Check("taxcodesid", !AreEqual(GetDT(_payloadTable, row, "TAXCODE_SID"), existing.taxcodesid), GetDT(_payloadTable, row, "TAXCODE_SID"), existing.taxcodesid);
-            Check("dcs_code", !AreEqual(GetDT(_payloadTable, row, "DCS_CODE"), existing.dcs_code), GetDT(_payloadTable, row, "DCS_CODE"), existing.dcs_code);
+
+            if (isDCSEnabled)
+            {
+                Check("dcs_code", !AreEqual(GetDT(_payloadTable, row, "DCS_CODE"), existing.dcs_code), GetDT(_payloadTable, row, "DCS_CODE"), existing.dcs_code);
+            }
 
             if (isUDFTextEnabled)
             {

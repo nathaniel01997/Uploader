@@ -1,30 +1,19 @@
+using GXUploader.Helper;
 using System.Text.Json;
 
 namespace GXUploader
 {
     internal static class Program
     {
-        /// <summary>
-        ///  The main entry point for the application.
-        /// </summary>
         [STAThread]
         static void Main()
         {
-            // To customize application configuration such as set high DPI settings or default font,
-            // see https://aka.ms/applicationconfiguration.
             ApplicationConfiguration.Initialize();
 
-            string basePath =
-                @"C:\Users\JohnDave\Desktop\LicenseGenerator\LicenseGenerator\bin\Release\net8.0\win-x64";
-
-            if (IsTimeTampered(basePath))
-            {
-                return; // STOP APP
-            }
-
+            string basePath = LicensingPath.BasePath;
             string licenseKeyPath = Path.Combine(basePath, "license_key.json");
 
-            // 🔥 2. LICENSE CHECK
+            // 🔥 1. LICENSE CHECK FIRST
             if (!File.Exists(licenseKeyPath))
             {
                 using (LicenseForm lf = new LicenseForm())
@@ -39,6 +28,11 @@ namespace GXUploader
                 }
             }
 
+            // 🔥 2. ONLY RUN TAMPER CHECK IF LICENSE EXISTS
+            if (IsTimeTampered(basePath))
+            {
+                return; // STOP APP
+            }
 
             Application.Run(new MainForm());
         }
@@ -58,7 +52,6 @@ namespace GXUploader
 
                     DateTime lastRun = DateTime.Parse(data["LastRun"]);
 
-                    // ❌ BACKDATE DETECTED
                     if (now < lastRun)
                     {
                         MessageBox.Show(
@@ -71,11 +64,10 @@ namespace GXUploader
                     }
                 }
 
-                // ✔ SAVE CURRENT TIME
                 var save = new Dictionary<string, string>
-        {
-            { "LastRun", now.ToString("o") }
-        };
+                {
+                    { "LastRun", now.ToString("o") }
+                };
 
                 File.WriteAllText(file,
                     JsonSerializer.Serialize(save, new JsonSerializerOptions { WriteIndented = true }));

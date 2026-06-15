@@ -226,7 +226,7 @@ namespace GXUploader.Dtos
     {
         public string sid { get; set; } = "";
         public string sbssid { get; set; } = "";
-
+        public string vendsid { get; set; }
         public string description1 { get; set; } = "";
         public string description2 { get; set; } = "";
         public string description3 { get; set; } = "";

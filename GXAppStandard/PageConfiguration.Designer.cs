@@ -36,12 +36,16 @@
 
         private void InitializeComponent()
         {
-            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges1 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
-            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges2 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
-            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges3 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
-            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges4 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
-            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges5 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
-            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges6 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
+            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges11 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
+            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges12 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
+            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges13 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
+            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges14 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
+            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges15 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
+            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges16 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
+            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges17 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
+            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges18 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
+            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges19 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
+            Guna.UI2.WinForms.Suite.CustomizableEdges customizableEdges20 = new Guna.UI2.WinForms.Suite.CustomizableEdges();
             guna2HtmlLabel1 = new Guna.UI2.WinForms.Guna2HtmlLabel();
             header = new Guna.UI2.WinForms.Guna2HtmlLabel();
             lblUDFText = new Label();
@@ -51,6 +55,11 @@
             tgText = new Guna.UI2.WinForms.Guna2ToggleSwitch();
             label3 = new Label();
             tgUDFDate = new Guna.UI2.WinForms.Guna2ToggleSwitch();
+            label4 = new Label();
+            this.tgVendorName = new Guna.UI2.WinForms.Guna2ToggleSwitch();
+            label5 = new Label();
+            this.tgDCS = new Guna.UI2.WinForms.Guna2ToggleSwitch();
+            tgDCS = new Guna.UI2.WinForms.Guna2ToggleSwitch();
             SuspendLayout();
             // 
             // guna2HtmlLabel1
@@ -88,10 +97,10 @@
             // tgUDFText
             // 
             tgUDFText.CheckedState.FillColor = Color.MediumSeaGreen;
-            tgUDFText.CustomizableEdges = customizableEdges1;
+            tgUDFText.CustomizableEdges = customizableEdges11;
             tgUDFText.Location = new Point(383, 131);
             tgUDFText.Name = "tgUDFText";
-            tgUDFText.ShadowDecoration.CustomizableEdges = customizableEdges2;
+            tgUDFText.ShadowDecoration.CustomizableEdges = customizableEdges12;
             tgUDFText.Size = new Size(45, 22);
             tgUDFText.TabIndex = 1;
             // 
@@ -118,10 +127,10 @@
             // tgText
             // 
             tgText.CheckedState.FillColor = Color.MediumSeaGreen;
-            tgText.CustomizableEdges = customizableEdges3;
+            tgText.CustomizableEdges = customizableEdges13;
             tgText.Location = new Point(383, 159);
             tgText.Name = "tgText";
-            tgText.ShadowDecoration.CustomizableEdges = customizableEdges4;
+            tgText.ShadowDecoration.CustomizableEdges = customizableEdges14;
             tgText.Size = new Size(45, 22);
             tgText.TabIndex = 6;
             // 
@@ -138,17 +147,61 @@
             // tgUDFDate
             // 
             tgUDFDate.CheckedState.FillColor = Color.MediumSeaGreen;
-            tgUDFDate.CustomizableEdges = customizableEdges5;
+            tgUDFDate.CustomizableEdges = customizableEdges15;
             tgUDFDate.Location = new Point(383, 187);
             tgUDFDate.Name = "tgUDFDate";
-            tgUDFDate.ShadowDecoration.CustomizableEdges = customizableEdges6;
+            tgUDFDate.ShadowDecoration.CustomizableEdges = customizableEdges16;
             tgUDFDate.Size = new Size(45, 22);
             tgUDFDate.TabIndex = 8;
+            // 
+            // label4
+            // 
+            label4.AutoSize = true;
+            label4.Font = new Font("Segoe UI", 10F);
+            label4.Location = new Point(241, 215);
+            label4.Name = "label4";
+            label4.Size = new Size(64, 19);
+            label4.TabIndex = 9;
+            label4.Text = "VENDOR";
+            // 
+            // tgVendor
+            // 
+            this.tgVendorName.CheckedState.FillColor = Color.MediumSeaGreen;
+            this.tgVendorName.CustomizableEdges = customizableEdges17;
+            this.tgVendorName.Location = new Point(383, 215);
+            this.tgVendorName.Name = "tgVendor";
+            this.tgVendorName.ShadowDecoration.CustomizableEdges = customizableEdges18;
+            this.tgVendorName.Size = new Size(45, 22);
+            this.tgVendorName.TabIndex = 10;
+            // 
+            // label5
+            // 
+            label5.AutoSize = true;
+            label5.Font = new Font("Segoe UI", 10F);
+            label5.Location = new Point(241, 243);
+            label5.Name = "label5";
+            label5.Size = new Size(35, 19);
+            label5.TabIndex = 11;
+            label5.Text = "DCS";
+            // 
+            // tgDCS
+            // 
+            tgDCS.CheckedState.FillColor = Color.MediumSeaGreen;
+            tgDCS.CustomizableEdges = customizableEdges19;
+            tgDCS.Location = new Point(383, 243);
+            tgDCS.Name = "tgDCS";
+            tgDCS.ShadowDecoration.CustomizableEdges = customizableEdges20;
+            tgDCS.Size = new Size(45, 22);
+            tgDCS.TabIndex = 12;
             // 
             // PageConfiguration
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
+            Controls.Add(label5);
+            Controls.Add(tgDCS);
+            Controls.Add(label4);
+            Controls.Add(this.tgVendorName);
             Controls.Add(label3);
             Controls.Add(tgUDFDate);
             Controls.Add(label2);
@@ -174,5 +227,9 @@
         private Guna.UI2.WinForms.Guna2ToggleSwitch tgText;
         private Label label3;
         private Guna.UI2.WinForms.Guna2ToggleSwitch tgUDFDate;
+        private Label label4;
+        private Guna.UI2.WinForms.Guna2ToggleSwitch guna2ToggleSwitch1;
+        private Label label5;
+        private Guna.UI2.WinForms.Guna2ToggleSwitch tgDCS;
     }
 }
