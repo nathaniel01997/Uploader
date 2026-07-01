@@ -46,7 +46,7 @@ namespace GXUploader
         public PageInventory()
         {
             InitializeComponent();
-
+            _config = new PageConfiguration();
             _connString = ConfigurationManager.AppSettings["OracleConnection"];
 
             _prismCfg = PrismConfigRepository.Load();
@@ -2916,7 +2916,7 @@ namespace GXUploader
 
         private bool HasItemChanges(UploadWorkItem work, ExistingItemInfo existing)
         {
-            _config = new PageConfiguration();
+
             bool isUDFTextEnabled = _config.IsUDFTextEnabled();
             bool isUDFDateEnabled = _config.IsUDFDateEnabled();
             bool isTextEnabled = _config.IsTextEnabled();
