@@ -432,7 +432,7 @@
             lblVersion.Name = "lblVersion";
             lblVersion.Size = new Size(33, 15);
             lblVersion.TabIndex = 0;
-            lblVersion.Text = "v1.3.0";
+            lblVersion.Text = "v1.4.0";
             lblVersion.Click += lblVersion_Click;
             // 
             // pnlContainer

@@ -331,7 +331,7 @@ namespace GXUploader
             payloadDt = new DataTable();
 
             using var parser = new TextFieldParser(filePath);
-            parser.SetDelimiters(",");
+            parser.SetDelimiters(",", "|");
             parser.HasFieldsEnclosedInQuotes = true;
             parser.TrimWhiteSpace = true;
 
