@@ -1,6 +1,7 @@
 ﻿// PageInventory.cs
-using GXUploader.Dtos;
+using GXUploader.Helper.Inventory;
 using GXUploader.Helpers;
+using GXUploader.Model.Inventory;
 using Microsoft.VisualBasic.FileIO;
 using Oracle.ManagedDataAccess.Client;
 using System;
@@ -1552,6 +1553,8 @@ namespace GXUploader
                 string desc3 = GetDT(dt, r, "DESC3");
                 string desc4 = GetDT(dt, r, "DESC4");
 
+                string longdescription = GetDT(dt, r, "LONG_DESCRIPTION");
+
                 string attr = GetDT(dt, r, "ATTR");
                 string size = GetDT(dt, r, "SIZE");
 
@@ -1626,6 +1629,7 @@ namespace GXUploader
 
                     cost = hasValidCost ? costValue : 0m,
                     lastrcvdcost = ParseDecimal(GetDT(dt, r, "ORDER_COST"), 0m),
+                    longdescription = longdescription,
 
                     spif = ParseInt(GetDT(dt, r, "SPIF"), 0),
                     serialtype = ParseInt(GetDT(dt, r, "Serial_Type"), 0),
@@ -2360,6 +2364,7 @@ namespace GXUploader
                 i.serial_type AS serialtype,
                 i.lot_type AS lottype,
                 i.non_inventory AS noninventory,
+                i.long_description AS longdescription,
 
                 -- UDF 1–5
                 i.udf1_string,
@@ -2557,6 +2562,8 @@ namespace GXUploader
                 description3 = DbToString(reader, "description3"),
                 description4 = DbToString(reader, "description4"),
 
+                longdescription = DbToString(reader, "longdescription"),
+
                 attribute = DbToString(reader, "attribute"),
                 item_size = DbToString(reader, "item_size"),
                 cost = DbToDecimal(reader, "cost"),
@@ -2720,6 +2727,7 @@ namespace GXUploader
                 activeseasonsid = seasonSid,
 
                 actstrpricewt = sourceInv.actstrpricewt,
+                longdescription = sourceInv.longdescription,
                 spif = sourceInv.spif,
 
                 udf1date = sourceInv.udf1date,

@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace GXUploader.Dtos
+namespace GXUploader.Model.Inventory
 {
     // Root payload
     public class UploadRoot
@@ -43,6 +43,7 @@ namespace GXUploader.Dtos
 
     public class InventoryItem
     {
+        public string? longdescription { get; set; }
         public string? sid { get; set; }
         public string? sbssid { get; set; }
         public string? dcssid { get; set; }
@@ -322,6 +323,8 @@ namespace GXUploader.Dtos
         public DateTime? udf3date { get; set; }
         public int? noninventory { get; set; }
 
+        public string? longdescription { get; set; }
+
     }
 
     public class UpdateInvnExtend
@@ -452,6 +455,8 @@ namespace GXUploader.Dtos
 
         public int? lottype { get; set; }
         public int? serialtype { get; set; }
+
+        public string? longdescription { get; set; }
     }
 
     public class ExistingPriceInfo

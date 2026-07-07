@@ -1,6 +1,6 @@
 ﻿using GXUploader.Helper;
 using GXUploader.Helpers;
-using GXUploader.Model;
+using GXUploader.Model.Inventory;
 using System;
 using System.Collections.Generic;
 using System.IO;

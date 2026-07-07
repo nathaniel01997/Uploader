@@ -2,7 +2,7 @@
 using System;
 using System.Configuration;
 
-namespace GXUploader.Helpers
+namespace GXUploader.Helper.Inventory
 {
     public static class ReasonRepository
     {

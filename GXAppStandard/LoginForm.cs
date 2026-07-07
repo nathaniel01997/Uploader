@@ -1,5 +1,6 @@
 ﻿using GXUploader.Helper;
 using GXUploader.Model;
+using GXUploader.Model.Inventory;
 using System;
 using System.Text.Json;
 using System.Windows.Forms;

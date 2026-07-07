@@ -1,5 +1,5 @@
 using GXUploader.Helper;
-using GXUploader.Model;
+using GXUploader.Model.Inventory;
 using System.Text.Json;
 
 namespace GXUploader
