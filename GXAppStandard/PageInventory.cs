@@ -42,13 +42,20 @@ namespace GXUploader
             Timeout = TimeSpan.FromSeconds(60)
         };
 
+        private static readonly JsonSerializerOptions _jsonOptions = new JsonSerializerOptions
+        {
+            WriteIndented = true,
+            PropertyNamingPolicy = null,
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+        };
+
         private readonly object _fileLogLock = new object();
 
         public PageInventory()
         {
             InitializeComponent();
             _config = new PageConfiguration();
-            _connString = ConfigurationManager.AppSettings["OracleConnection"];
+            //_connString = ConfigurationManager.AppSettings["OracleConnection"];
 
             _prismCfg = PrismConfigRepository.Load();
 
@@ -62,7 +69,7 @@ namespace GXUploader
         {
             OracleConnection.ClearAllPools();
 
-            var conn = new OracleConnection(_connString);
+            var conn = new OracleConnection(DbHelper.GetOracleConnection());
             conn.Open();
             return conn;
         }
@@ -199,8 +206,6 @@ namespace GXUploader
                 if (allowCreateMissingData)
                 {
                     await UpdateVendorCodeFromDbAsync(_payloadTable);
-                    // Remove 
-                    // DO NOT call UpdateSbsNoFromDb here anymore because it overwrites SBS_No.
                     UpdateSbssidAndTaxcodesidFromDb(_payloadTable);
 
                     await UpdateDcsFromDbAsync(_payloadTable);
@@ -231,100 +236,6 @@ namespace GXUploader
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
-
-        //private async void btnReadCsv_Click(object sender, EventArgs e)
-        //{
-        //    if (string.IsNullOrWhiteSpace(_selectedCsvPath) || !File.Exists(_selectedCsvPath))
-        //    {
-        //        LogWarn("Read CSV clicked but no valid file selected.");
-        //        MessageBox.Show("Please browse and select a valid CSV file first.", "CSV",
-        //            MessageBoxButtons.OK, MessageBoxIcon.Warning);
-        //        return;
-        //    }
-
-        //    bool allowCreateMissingData = false;
-
-        //    var confirm = MessageBox.Show(
-        //        "If some data does not exist in the database, do you want the system to create it automatically?\n\n" +
-        //        "OK = Create missing data\n" +
-        //        "Cancel = Read CSV only",
-        //        "Create Missing Data",
-        //        MessageBoxButtons.OKCancel,
-        //        MessageBoxIcon.Question);
-
-        //    if (confirm == DialogResult.OK)
-        //        allowCreateMissingData = true;
-
-        //    try
-        //    {
-        //        LogInfo("Reading CSV (Row1=Payload header, Row2=Display header, Row3+=Data)...");
-
-        //        // -----------------------------
-        //        // Load CSV
-        //        // -----------------------------
-        //        ReadCsvToTwoTables(_selectedCsvPath, out _displayTable, out _payloadTable);
-
-        //        _displayTable ??= new DataTable();
-        //        _payloadTable ??= new DataTable();
-
-        //        int rowCount = _payloadTable.Rows.Count;
-
-        //        // -----------------------------
-        //        // Show grid ASAP (faster UX)
-        //        // -----------------------------
-        //        dgvInventory.SuspendLayout();
-        //        dgvInventory.DataSource = _displayTable;
-        //        MakeGridReadable();
-        //        HideEmptyColumns();
-        //        ApplyTableBorder();
-        //        dgvInventory.ResumeLayout();
-
-        //        btnStartUploading.Enabled = rowCount > 0;
-
-        //        // -----------------------------
-        //        // DB enrichment (OPTIMIZED)
-        //        // -----------------------------
-        //        if (allowCreateMissingData && rowCount > 0)
-        //        {
-        //            LogInfo("Enriching data from database...");
-
-        //            // Run independent async tasks in parallel
-        //            var vendorTask = UpdateVendorCodeFromDbAsync(_payloadTable);
-        //            var dcsTask = UpdateDcsFromDbAsync(_payloadTable);
-
-        //            // Synchronous but fast in-memory mapping
-        //            UpdateSbssidAndTaxcodesidFromDb(_payloadTable);
-        //            UpdatePriceSidFromDb(_payloadTable);
-        //            UpdateTextUdfSidFromDb(_payloadTable);
-
-        //            await Task.WhenAll(vendorTask, dcsTask);
-        //        }
-
-        //        LogInfo($"CSV processing completed. Rows: {rowCount}");
-        //    }
-        //    catch (OracleException oex)
-        //    {
-        //        btnStartUploading.Enabled = false;
-        //        LogError($"Oracle error {oex.Number}: {oex.Message}");
-
-        //        MessageBox.Show(
-        //            $"Oracle error {oex.Number}\n\n{oex.Message}",
-        //            "Oracle Error",
-        //            MessageBoxButtons.OK,
-        //            MessageBoxIcon.Error);
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        btnStartUploading.Enabled = false;
-        //        LogError(ex.ToString());
-
-        //        MessageBox.Show(
-        //            $"Failed to read CSV.\n\n{ex.Message}",
-        //            "Error",
-        //            MessageBoxButtons.OK,
-        //            MessageBoxIcon.Error);
-        //    }
-        //}
 
         private void ReadCsvToTwoTables(string filePath, out DataTable displayDt, out DataTable payloadDt)
         {
@@ -402,97 +313,6 @@ namespace GXUploader
             return name;
         }
 
-        //private async Task UpdateVendorCodeFromDbAsync(DataTable dt)
-        //{
-        //    if (dt == null)
-        //        throw new ArgumentNullException(nameof(dt));
-
-        //    if (dt.Rows.Count == 0)
-        //    {
-        //        LogWarn("UpdateVendorCodeFromDb: DataTable is empty.");
-        //        return;
-        //    }
-
-        //    if (!dt.Columns.Contains("VENDOR_CODE"))
-        //        throw new Exception("CSV column 'VENDOR_CODE' not found.");
-
-        //    if (!dt.Columns.Contains("VENDOR_NAME"))
-        //        throw new Exception("CSV column 'VENDOR_NAME' not found.");
-
-        //    if (!dt.Columns.Contains("VENDOR_SID"))
-        //        dt.Columns.Add("VENDOR_SID", typeof(string));
-
-        //    using var conn = OpenOracleConnection();
-        //    using var cmd = conn.CreateCommand();
-
-        //    cmd.BindByName = true;
-        //    cmd.CommandTimeout = OracleCommandTimeoutSeconds;
-        //    cmd.CommandText = @"
-        //        SELECT v.sid
-        //        FROM RPS.VENDOR v
-        //        WHERE v.VEND_CODE = :code
-        //        FETCH FIRST 1 ROWS ONLY";
-
-        //    cmd.Parameters.Add("code", OracleDbType.Varchar2);
-
-        //    for (int i = 0; i < dt.Rows.Count; i++)
-        //    {
-        //        DataRow row = dt.Rows[i];
-        //        string vendCode = row["VENDOR_CODE"]?.ToString()?.Trim() ?? string.Empty;
-        //        string vendName = row["VENDOR_NAME"]?.ToString()?.Trim() ?? string.Empty;
-
-        //        try
-        //        {
-        //            if (string.IsNullOrWhiteSpace(vendCode))
-        //            {
-        //                LogWarn($"[Row {i + 1}] VENDOR_CODE empty.");
-        //                continue;
-        //            }
-
-        //            if (string.IsNullOrWhiteSpace(vendName))
-        //                vendName = $"AUTO-{vendCode}";
-
-        //            cmd.Parameters["code"].Value = vendCode;
-
-        //            string sid = Convert.ToString(cmd.ExecuteScalar())?.Trim() ?? string.Empty;
-
-        //            if (!string.IsNullOrWhiteSpace(sid))
-        //            {
-        //                row["VENDOR_SID"] = sid;
-        //                LogInfo($"[Row {i + 1}] VENDOR FOUND → Code {vendCode}, SID {sid}");
-        //                continue;
-        //            }
-
-        //            LogWarn($"[Row {i + 1}] Vendor not found. Creating... Code={vendCode}, Name={vendName}");
-
-        //            await CreateVendorAsync(vendCode, vendName);
-
-        //            cmd.Parameters["code"].Value = vendCode;
-        //            sid = Convert.ToString(cmd.ExecuteScalar())?.Trim() ?? string.Empty;
-
-        //            if (!string.IsNullOrWhiteSpace(sid))
-        //            {
-        //                row["VENDOR_SID"] = sid;
-        //                LogInfo($"[Row {i + 1}] Vendor created → Code {vendCode}, SID {sid}");
-        //            }
-        //            else
-        //            {
-        //                LogError($"[Row {i + 1}] Vendor creation failed. Code={vendCode}");
-        //            }
-        //        }
-        //        catch (OracleException ex)
-        //        {
-        //            LogError($"[Row {i + 1}] Oracle error while processing vendor. Code={vendCode}. {ex.Message}");
-        //        }
-        //        catch (Exception ex)
-        //        {
-        //            LogError($"[Row {i + 1}] Unexpected error while processing vendor. Code={vendCode}. {ex.Message}");
-        //        }
-        //    }
-
-        //    LogInfo("Vendor lookup + creation completed.");
-        //}
-
         private async Task UpdateVendorCodeFromDbAsync(DataTable dt)
         {
             if (dt == null)
@@ -504,7 +324,6 @@ namespace GXUploader
                 return;
             }
 
-            // Ensure required columns exist
             string[] requiredColumns = { "VENDOR_CODE", "VENDOR_NAME", "SBS_No." };
             foreach (var col in requiredColumns)
             {
@@ -538,7 +357,6 @@ namespace GXUploader
                     string sid = "";
                     string subsidiarySid = "";
 
-                    // STEP 0: Lookup subsidiary SID from SBS_No.
                     using (var subCmd = new OracleCommand(@"
                         SELECT sid 
                         FROM rps.subsidiary
@@ -558,7 +376,6 @@ namespace GXUploader
                         continue;
                     }
 
-                    // STEP 1: Lookup vendor SID by code + subsidiary
                     using (var cmd = new OracleCommand(@"
                         SELECT v.sid
                         FROM rps.vendor v
@@ -574,12 +391,8 @@ namespace GXUploader
                         sid = cmd.ExecuteScalar()?.ToString()?.Trim() ?? "";
                     }
 
-                    // STEP 2: If not found, create vendor
                     if (string.IsNullOrWhiteSpace(sid))
                     {
-                        //LogWarn($"[Row {i + 1}] Vendor not found. Creating... Code={vendCode}, Name={vendName}");
-
-                        // Prepare API payload with correct subsidiary SID
                         var apiPayload = new
                         {
                             data = new[]
@@ -599,15 +412,10 @@ namespace GXUploader
                             }
                         };
 
-                        string payloadJson = JsonSerializer.Serialize(apiPayload);
+                        string payloadJson = JsonSerializer.Serialize(apiPayload, _jsonOptions);
 
-                        // Write payload before creation
-                        //WriteApiPayloadResponseToDailyFile(vendCode, payloadJson, "CREATING");
-
-                        // Create vendor
                         await CreateVendorAsync(vendCode, vendName, subsidiarySid);
 
-                        // STEP 3: Re-fetch SID after creation
                         using (var cmd2 = new OracleCommand(@"
                             SELECT v.sid
                             FROM rps.vendor v
@@ -626,21 +434,11 @@ namespace GXUploader
                         if (!string.IsNullOrWhiteSpace(sid))
                         {
                             row["VENDOR_SID"] = sid;
-                            //LogInfo($"[Row {i + 1}] Vendor created → Code={vendCode}, SID={sid}");
-
-                            //WriteApiPayloadResponseToDailyFile(vendCode, payloadJson, $"CREATED SID={sid}");
-                        }
-                        else
-                        {
-                            //LogError($"[Row {i + 1}] Vendor creation failed → Code={vendCode}");
-                            //WriteApiPayloadResponseToDailyFile(vendCode, payloadJson, "CREATION FAILED");
                         }
                     }
                     else
                     {
-                        // Vendor found
                         row["VENDOR_SID"] = sid;
-                        //LogInfo($"[Row {i + 1}] VENDOR FOUND → Code={vendCode}, SID={sid}");
                     }
                 }
                 catch (OracleException ex)
@@ -664,53 +462,113 @@ namespace GXUploader
                 return;
             }
 
-            string[] requiredColumns =
+            if (!dt.Columns.Contains("DCS"))
             {
-        "DCS",
-        "DEPT_NAME",
-        "DEPT_CODE",
-        "CLASS_NAME",
-        "CLASS_CODE",
-        "SUBCLASS_NAME",
-        "SUBCLASS_CODE",
-        "SBS_No."
-    };
-
-            foreach (var col in requiredColumns)
-            {
-                if (!dt.Columns.Contains(col))
-                    throw new Exception($"CSV column '{col}' not found.");
+                throw new Exception("CSV column 'DCS' not found.");
             }
 
             if (!dt.Columns.Contains("DCS_CODE"))
+            {
                 dt.Columns.Add("DCS_CODE", typeof(string));
+            }
+
+            string[] requiredColumns =
+            {
+                "DEPT_NAME",
+                "DEPT_CODE",
+                "CLASS_NAME",
+                "CLASS_CODE",
+                "SUBCLASS_NAME",
+                "SUBCLASS_CODE",
+                "SBS_No."
+            };
+
+            bool requiresOtherColumns = dt.AsEnumerable()
+                .Any(row => string.IsNullOrWhiteSpace(row["DCS"]?.ToString()));
+
+            if (requiresOtherColumns)
+            {
+                foreach (var col in requiredColumns)
+                {
+                    if (!dt.Columns.Contains(col))
+                    {
+                        throw new Exception($"CSV column '{col}' not found.");
+                    }
+                }
+            }
+
+            string GetValue(DataRow row, string column)
+            {
+                if (!dt.Columns.Contains(column))
+                    return "";
+
+                return row[column]?.ToString()?.Trim() ?? "";
+            }
 
             using var conn = OpenOracleConnection();
+
+            string GetDcsSid(string dcsCode, string sbsNo)
+            {
+                if (string.IsNullOrWhiteSpace(dcsCode) ||
+                    string.IsNullOrWhiteSpace(sbsNo))
+                {
+                    return "";
+                }
+
+                using var cmd = new OracleCommand(
+                    @"SELECT d.sid
+                      FROM rps.dcs d
+                      INNER JOIN rps.subsidiary s
+                          ON d.sbs_sid = s.sid
+                      WHERE d.dcs_code = :code
+                        AND s.sbs_no = :sbsno
+                      FETCH FIRST 1 ROWS ONLY",
+                    conn);
+
+                cmd.BindByName = true;
+                cmd.CommandTimeout = OracleCommandTimeoutSeconds;
+
+                cmd.Parameters.Add(":code", OracleDbType.Varchar2).Value = dcsCode;
+                cmd.Parameters.Add(":sbsno", OracleDbType.Varchar2).Value = sbsNo;
+
+                var result = cmd.ExecuteScalar();
+
+                return result != null && result != DBNull.Value
+                    ? result.ToString()?.Trim() ?? ""
+                    : "";
+            }
 
             for (int i = 0; i < dt.Rows.Count; i++)
             {
                 try
                 {
-                    string deptName = dt.Rows[i]["DEPT_NAME"]?.ToString()?.Trim() ?? "";
-                    string deptCode = dt.Rows[i]["DEPT_CODE"]?.ToString()?.Trim() ?? "";
-                    string className = dt.Rows[i]["CLASS_NAME"]?.ToString()?.Trim() ?? "";
-                    string classCode = dt.Rows[i]["CLASS_CODE"]?.ToString()?.Trim() ?? "";
-                    string subClassName = dt.Rows[i]["SUBCLASS_NAME"]?.ToString()?.Trim() ?? "";
-                    string subClassCode = dt.Rows[i]["SUBCLASS_CODE"]?.ToString()?.Trim() ?? "";
-                    string sbsNo = dt.Rows[i]["SBS_No."]?.ToString()?.Trim() ?? "";
+                    DataRow row = dt.Rows[i];
 
-                    // STEP 1: CSV DCS value → store as DCS_CODE
-                    string csvDcsValue = dt.Rows[i]["DCS"]?.ToString()?.Trim() ?? "";
-                    string dcsCode = dt.Rows[i]["DCS_CODE"]?.ToString()?.Trim() ?? "";
+                    string csvDcsValue = GetValue(row, "DCS");
+                    string dcsCode = GetValue(row, "DCS_CODE");
+
+                    string deptName = GetValue(row, "DEPT_NAME");
+                    string deptCode = GetValue(row, "DEPT_CODE");
+                    string className = GetValue(row, "CLASS_NAME");
+                    string classCode = GetValue(row, "CLASS_CODE");
+                    string subClassName = GetValue(row, "SUBCLASS_NAME");
+                    string subClassCode = GetValue(row, "SUBCLASS_CODE");
+                    string sbsNo = GetValue(row, "SBS_No.");
 
                     if (string.IsNullOrWhiteSpace(dcsCode))
                     {
-                        if (!string.IsNullOrWhiteSpace(csvDcsValue))
-                            dcsCode = csvDcsValue;
-                        else
+                        if (!string.IsNullOrWhiteSpace(deptCode) &&
+                            !string.IsNullOrWhiteSpace(classCode) &&
+                            !string.IsNullOrWhiteSpace(subClassCode))
+                        {
                             dcsCode = $"{deptCode}{classCode}{subClassCode}".Trim();
-
-                        dt.Rows[i]["DCS_CODE"] = dcsCode;
+                            row["DCS_CODE"] = dcsCode;
+                        }
+                        else
+                        {
+                            LogWarn($"[Row {i + 1}] [DCS] Skipped: DCS_CODE or department/class/subclass codes are missing.");
+                            continue;
+                        }
                     }
 
                     if (string.IsNullOrWhiteSpace(dcsCode))
@@ -718,45 +576,27 @@ namespace GXUploader
                         continue;
                     }
 
-                    string sid = "";
+                    string sid = GetDcsSid(dcsCode, sbsNo);
 
-                    // STEP 2: Lookup SID by CODE + SBS_No
-                    using (var cmd = new OracleCommand(
-                        @"SELECT d.sid
-                  FROM rps.subsidiary s
-                  LEFT JOIN rps.dcs d ON d.sbs_sid = s.sid
-                  WHERE d.dcs_code = :code
-                    AND s.sbs_no = :sbsno
-                  FETCH FIRST 1 ROWS ONLY",
-                        conn))
-                    {
-                        cmd.BindByName = true;
-                        cmd.CommandTimeout = OracleCommandTimeoutSeconds;
-                        cmd.Parameters.Add(":code", OracleDbType.Varchar2).Value = dcsCode;
-                        cmd.Parameters.Add(":sbsno", OracleDbType.Varchar2).Value = sbsNo;
-
-                        var result = cmd.ExecuteScalar();
-                        sid = (result != null) ? result.ToString().Trim() : "";
-                    }
-
-                    // Store SID in CSV
-                    dt.Rows[i]["DCS"] = sid;
-
-                    // IF ALREADY EXISTS → SKIP CREATION
                     if (!string.IsNullOrWhiteSpace(sid))
                     {
-                        //LogInfo($"[Row {i + 1}] [DCS] FOUND → CODE={dcsCode}, SID={sid}");
+                        row["DCS"] = sid;
+                        LogInfo($"[Row {i + 1}] [DCS] Existing DCS found. CODE={dcsCode}, SID={sid}");
                         continue;
                     }
 
-                    if (string.IsNullOrWhiteSpace(deptCode) &&
-                        string.IsNullOrWhiteSpace(classCode) &&
-                        string.IsNullOrWhiteSpace(subClassCode))
+                    if (string.IsNullOrWhiteSpace(deptCode) ||
+                        string.IsNullOrWhiteSpace(classCode) ||
+                        string.IsNullOrWhiteSpace(subClassCode) ||
+                        string.IsNullOrWhiteSpace(deptName) ||
+                        string.IsNullOrWhiteSpace(className) ||
+                        string.IsNullOrWhiteSpace(subClassName) ||
+                        string.IsNullOrWhiteSpace(sbsNo))
                     {
+                        LogWarn($"[Row {i + 1}] [DCS] SID not found for CODE={dcsCode}. Creation skipped because required fields are missing.");
+                        row["DCS"] = DBNull.Value;
                         continue;
                     }
-
-                    //LogWarn($"[Row {i + 1}] [DCS] NOT FOUND → Creating CODE={dcsCode}");
 
                     string subsidiarySid = PrismAuthSessionHelper.SubsidiarySid;
 
@@ -766,25 +606,40 @@ namespace GXUploader
                         subsidiarySid = PrismAuthSessionHelper.SubsidiarySid;
                     }
 
+                    if (string.IsNullOrWhiteSpace(subsidiarySid))
+                    {
+                        LogWarn($"[Row {i + 1}] [DCS] Creation skipped: Subsidiary SID is missing.");
+                        continue;
+                    }
+
                     EnsurePrismConfigLoaded();
 
                     string workstation = (_prismCfg?.Workstation ?? "").Trim();
+
+                    if (string.IsNullOrWhiteSpace(workstation))
+                    {
+                        LogWarn($"[Row {i + 1}] [DCS] Creation skipped: Workstation configuration is missing.");
+                        continue;
+                    }
+
                     string url = $"http://{workstation}/api/backoffice/dcs";
                     string auth = await GetAuthSessionAsync();
 
-                    // Fetch TAXABLE sid dynamically per row
-                    string taxCodeSid = "";
-                    string csvTaxCode = dt.Rows[i]["TAX_CODE"]?.ToString()?.Trim() ?? "";
+                    string csvTaxCode = GetValue(row, "TAX_CODE");
 
                     if (string.IsNullOrWhiteSpace(csvTaxCode))
                     {
-                        throw new Exception($"Row {i + 1}: TAX_CODE not found in CSV.");
+                        LogWarn($"[Row {i + 1}] [DCS] Creation skipped: TAX_CODE is missing.");
+                        continue;
                     }
+
+                    string taxCodeSid = "";
 
                     using (var taxCmd = new OracleCommand(
                         @"SELECT t.sid
-                          FROM rps.subsidiary s
-                          LEFT JOIN rps.tax_code t ON t.sbs_sid = s.sid
+                          FROM rps.tax_code t
+                          INNER JOIN rps.subsidiary s
+                              ON t.sbs_sid = s.sid
                           WHERE t.tax_code = :taxCode
                             AND s.sbs_no = :sbsno
                           FETCH FIRST 1 ROWS ONLY",
@@ -792,20 +647,28 @@ namespace GXUploader
                     {
                         taxCmd.BindByName = true;
                         taxCmd.CommandTimeout = OracleCommandTimeoutSeconds;
+
                         taxCmd.Parameters.Add(":taxCode", OracleDbType.Varchar2).Value = csvTaxCode;
                         taxCmd.Parameters.Add(":sbsno", OracleDbType.Varchar2).Value = sbsNo;
 
-                        taxCodeSid = taxCmd.ExecuteScalar()?.ToString()?.Trim() ?? "";
+                        var result = taxCmd.ExecuteScalar();
+
+                        taxCodeSid = result != null && result != DBNull.Value
+                            ? result.ToString()?.Trim() ?? ""
+                            : "";
                     }
 
                     if (string.IsNullOrWhiteSpace(taxCodeSid))
-                        throw new Exception($"Row {i + 1}: taxcodesid not found for TAX_CODE={csvTaxCode}");
+                    {
+                        LogWarn($"[Row {i + 1}] [DCS] taxcodesid not found for TAX_CODE={csvTaxCode}");
+                        continue;
+                    }
 
                     var payload = new
                     {
                         data = new[]
                         {
-                        new
+                            new
                             {
                                 originapplication = "RProPrismWeb",
                                 active = 1,
@@ -823,50 +686,35 @@ namespace GXUploader
                         }
                     };
 
-                    string json = JsonSerializer.Serialize(payload);
+                    string json = JsonSerializer.Serialize(payload, _jsonOptions);
 
                     using var req = new HttpRequestMessage(HttpMethod.Post, url);
 
                     req.Content = new StringContent(json, Encoding.UTF8, "application/json");
-
                     req.Headers.TryAddWithoutValidation("auth-session", auth);
                     req.Headers.TryAddWithoutValidation("Accept", "application/json, text/plain, version=2");
 
                     using var resp = await _http.SendAsync(req);
 
-                    var body = await resp.Content.ReadAsStringAsync();
-
-                    WriteApiPayloadResponseToDailyFile(dcsCode, json, body);
+                    string body = await resp.Content.ReadAsStringAsync();
 
                     if (!resp.IsSuccessStatusCode)
                     {
-                        LogError(body);
+                        LogError($"[Row {i + 1}] [DCS] Creation failed: HTTP {(int)resp.StatusCode}: {body}");
                         continue;
                     }
 
-                    // STEP 3: Re-fetch SID after creation
-                    using (var cmd2 = new OracleCommand(
-                        @"SELECT d.sid
-                          FROM rps.subsidiary s
-                          LEFT JOIN rps.dcs d ON d.sbs_sid = s.sid
-                          WHERE d.dcs_code = :code
-                            AND s.sbs_no = :sbsno
-                          FETCH FIRST 1 ROWS ONLY",
-                        conn))
-                    {
-                        cmd2.BindByName = true;
-
-                        cmd2.Parameters.Add(":code", OracleDbType.Varchar2).Value = dcsCode;
-                        cmd2.Parameters.Add(":sbsno", OracleDbType.Varchar2).Value = sbsNo;
-
-                        sid = cmd2.ExecuteScalar()?.ToString()?.Trim() ?? "";
-                    }
+                    sid = GetDcsSid(dcsCode, sbsNo);
 
                     if (!string.IsNullOrWhiteSpace(sid))
                     {
-                        dt.Rows[i]["DCS"] = sid;
-
-                        //LogInfo($"[Row {i + 1}] [DCS] CREATED → CODE={dcsCode}, SID={sid}");
+                        row["DCS"] = sid;
+                        LogInfo($"[Row {i + 1}] [DCS] Created/found successfully. CODE={dcsCode}, SID={sid}");
+                    }
+                    else
+                    {
+                        LogWarn($"[Row {i + 1}] [DCS] API succeeded, but SID was not found in the database for CODE={dcsCode}.");
+                        row["DCS"] = DBNull.Value;
                     }
                 }
                 catch (Exception ex)
@@ -883,6 +731,17 @@ namespace GXUploader
             if (payloadDt.Rows.Count == 0)
             {
                 LogWarn("[PRICE_SID] Payload DataTable is empty.");
+                return;
+            }
+
+            string sbsCol =
+                payloadDt.Columns.Contains("SBS_No") ? "SBS_No" :
+                payloadDt.Columns.Contains("SBS_No.") ? "SBS_No." :
+                "";
+
+            if (string.IsNullOrWhiteSpace(sbsCol))
+            {
+                LogWarn("[PRICE_SID] CSV column 'SBS_No' or 'SBS_No.' not found.");
                 return;
             }
 
@@ -911,7 +770,6 @@ namespace GXUploader
                 return;
             }
 
-            // Ensure PRICE_SID columns exist
             foreach (int idx in levelIndexes)
             {
                 string sidCol = $"PRICE_SID{idx}";
@@ -919,16 +777,15 @@ namespace GXUploader
                     payloadDt.Columns.Add(sidCol, typeof(string));
             }
 
-            // 🔥 PROCESS PER ROW (SBS_NO IS PER ROW)
             for (int r = 0; r < payloadDt.Rows.Count; r++)
             {
                 var row = payloadDt.Rows[r];
 
-                string sbsNoText = row["SBS_No."]?.ToString()?.Trim();
+                string sbsNoText = row[sbsCol]?.ToString()?.Trim();
 
-                if (!int.TryParse(sbsNoText, out int sbsNo))
+                if (string.IsNullOrWhiteSpace(sbsNoText))
                 {
-                    LogWarn($"[PRICE_SID][Row {r + 1}] Invalid SBS_No.: {sbsNoText}");
+                    LogWarn($"[PRICE_SID][Row {r + 1}] SBS_No is empty.");
                     continue;
                 }
 
@@ -951,7 +808,7 @@ namespace GXUploader
                     for (int i = 0; i < levelIndexes.Count; i++)
                         cmd.Parameters.Add($":p{i}", OracleDbType.Int32).Value = levelIndexes[i];
 
-                    cmd.Parameters.Add(":sbsNo", OracleDbType.Int32).Value = sbsNo;
+                    cmd.Parameters.Add(":sbsNo", OracleDbType.Varchar2).Value = sbsNoText;
 
                     using var rdr = cmd.ExecuteReader();
 
@@ -967,11 +824,13 @@ namespace GXUploader
                     }
                 }
 
-                // Assign values per level
                 foreach (int idx in levelIndexes)
                 {
                     string levelCol = $"PRICE_LEVEL{idx}";
                     string sidCol = $"PRICE_SID{idx}";
+
+                    if (!payloadDt.Columns.Contains(levelCol))
+                        continue;
 
                     string priceText = row[levelCol]?.ToString()?.Trim() ?? "";
 
@@ -988,7 +847,6 @@ namespace GXUploader
                     else
                     {
                         row[sidCol] = DBNull.Value;
-                        //LogWarn($"[PRICE_SID][Row {r + 1}] price_lvl {idx} not found for SBS {sbsNo}");
                     }
                 }
             }
@@ -1046,180 +904,6 @@ namespace GXUploader
             return messages;
         }
 
-        //private async void btnStartUploading_Click(object sender, EventArgs e)
-        //{
-        //    if (_payloadTable == null || _payloadTable.Rows.Count == 0)
-        //    {
-        //        LogWarn("No payload data loaded. Please Read CSV first.");
-        //        return;
-        //    }
-
-        //    btnStartUploading.Enabled = false;
-        //    btnReadCsv.Enabled = false;
-        //    btnBrowseCsv.Enabled = false;
-
-        //    bool stopped = false;
-
-        //    try
-        //    {
-        //        await GetAuthSessionAsync(forceRefresh: false);
-
-        //        if (string.IsNullOrWhiteSpace(PrismAuthSessionHelper.SeasonSid))
-        //        {
-        //            LogWarn("SeasonSid is empty. Forcing Prism auth refresh once...");
-        //            PrismAuthSessionHelper.ClearCache();
-        //            await GetAuthSessionAsync(forceRefresh: true);
-        //        }
-
-        //        if (string.IsNullOrWhiteSpace(PrismAuthSessionHelper.SeasonSid))
-        //            throw new Exception("SeasonSid is still empty. Prism session did not return seasonsid.");
-
-        //        UpdateSbssidAndTaxcodesidFromDb(_payloadTable);
-        //        await UpdateDcsFromDbAsync(_payloadTable);
-
-        //        var allWork = BuildUploadWorkItemsFromDataTable(_payloadTable);
-
-        //        if (allWork.Count == 0)
-        //        {
-        //            LogWarn("No valid rows to upload.");
-        //            return;
-        //        }
-
-        //        int inserted = 0;
-        //        int updated = 0;
-        //        int skipped = 0;
-        //        int processed = 0;
-        //        int errorCount = 0;
-
-        //        var semaphore = new SemaphoreSlim(10); // 🔥 SPEED CONTROL (ONLY CHANGE)
-
-        //        var tasks = new List<Task>();
-
-        //        foreach (var work in allWork)
-        //        {
-        //            await semaphore.WaitAsync();
-
-        //            tasks.Add(Task.Run(async () =>
-        //            {
-        //                try
-        //                {
-        //                    string itemCode = GetItemCodeFromWorkItem(work)?.Trim();
-
-        //                    if (string.IsNullOrWhiteSpace(itemCode))
-        //                    {
-        //                        int current = Interlocked.Increment(ref processed);
-        //                        LogWarn($"Progress: {current}/{allWork.Count} | Skipping row: item code empty | Key={work.Key}");
-        //                        return;
-        //                    }
-
-        //                    string sbsNo = work.Data.InventoryItems[0].sbssid?.Trim();
-
-        //                    if (string.IsNullOrWhiteSpace(sbsNo))
-        //                    {
-        //                        int current = Interlocked.Increment(ref processed);
-        //                        LogWarn($"Progress: {current}/{allWork.Count} | Skipping SBS empty | Item={itemCode} | Key={work.Key}");
-        //                        return;
-        //                    }
-
-        //                    var existing = await GetExistingItemInfoAsync(itemCode, UseUpcMode, sbsNo);
-
-        //                    object payloadToSend;
-        //                    string actionLabel;
-
-        //                    if (existing == null)
-        //                    {
-        //                        payloadToSend = new UploadRoot
-        //                        {
-        //                            data = new List<UploadData> { work.Data }
-        //                        };
-        //                        actionLabel = "INSERT";
-        //                    }
-        //                    else if (HasItemChanges(work, existing))
-        //                    {
-        //                        payloadToSend = BuildUpdatePayload(work, existing);
-        //                        actionLabel = "UPDATE";
-        //                    }
-        //                    else
-        //                    {
-        //                        int current = Interlocked.Increment(ref processed);
-        //                        Interlocked.Increment(ref skipped);
-
-        //                        LogInfo($"Progress: {current}/{allWork.Count} | SKIPPED (no changes) | Item={itemCode} | Key={work.Key}");
-        //                        return;
-        //                    }
-
-        //                    var result = await PostInventorySaveItemsAsync(payloadToSend);
-        //                    //WriteApiPayloadResponseToDailyFile(work.Key, result.PayloadJson, result.ResponseBody);
-
-        //                    var apiErrors = ExtractApiErrorMessages(result.ResponseBody);
-
-        //                    bool hasErrors =
-        //                        result.StatusCode < 200 ||
-        //                        result.StatusCode >= 300 ||
-        //                        (apiErrors != null && apiErrors.Count > 0);
-
-        //                    if (hasErrors)
-        //                    {
-        //                        Interlocked.Increment(ref errorCount);
-
-        //                        int current = Interlocked.Increment(ref processed);
-
-        //                        LogInfo($"Progress: {current}/{allWork.Count} | ERROR | Item={itemCode} | Key={work.Key}");
-        //                        return;
-        //                    }
-
-        //                    if (actionLabel == "INSERT")
-        //                        Interlocked.Increment(ref inserted);
-        //                    else if (actionLabel == "UPDATE")
-        //                        Interlocked.Increment(ref updated);
-
-        //                    int success = Interlocked.Increment(ref processed);
-
-        //                    LogInfo($"Progress: {success}/{allWork.Count} | {actionLabel} | Item={itemCode} | Key={work.Key}");
-        //                }
-        //                catch (Exception ex)
-        //                {
-        //                    Interlocked.Increment(ref errorCount);
-
-        //                    int current = Interlocked.Increment(ref processed);
-
-        //                    LogError($"Progress: {current}/{allWork.Count} | ERROR | Key={work.Key} | {ex}");
-        //                }
-        //                finally
-        //                {
-        //                    semaphore.Release();
-        //                }
-        //            }));
-        //        }
-
-        //        await Task.WhenAll(tasks);
-        //        // adjustment Memo price level only 
-
-
-
-
-        //        if (!stopped)
-        //        {
-        //            MessageBox.Show(
-        //                $"Upload completed.\n\nInserted: {inserted}\nUpdated: {updated}\nSkipped: {skipped}\nError: {errorCount}",
-        //                "Done",
-        //                MessageBoxButtons.OK,
-        //                MessageBoxIcon.Information);
-        //        }
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        LogError($"Upload failed: {ex}");
-        //        MessageBox.Show(ex.Message, "Upload Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-        //    }
-        //    finally
-        //    {
-        //        btnStartUploading.Enabled = true;
-        //        btnReadCsv.Enabled = true;
-        //        btnBrowseCsv.Enabled = true;
-        //    }
-        //}
-
         private async void btnStartUploading_Click(object sender, EventArgs e)
         {
             if (_payloadTable == null || _payloadTable.Rows.Count == 0)
@@ -1250,6 +934,7 @@ namespace GXUploader
 
                 UpdateSbssidAndTaxcodesidFromDb(_payloadTable);
                 await UpdateDcsFromDbAsync(_payloadTable);
+                UpdatePriceSidFromDb(_payloadTable);
 
                 var allWork = BuildUploadWorkItemsFromDataTable(_payloadTable);
 
@@ -1321,9 +1006,12 @@ namespace GXUploader
                                 return;
                             }
 
-                            // 🔥 FIX: prevents UI deadlock/hanging
+                            string payloadJson = JsonSerializer.Serialize(payloadToSend, _jsonOptions);
+
                             var result = await PostInventorySaveItemsAsync(payloadToSend)
                                 .ConfigureAwait(false);
+
+                            WriteApiPayloadResponseToDailyFile(work.Key, payloadJson, result.ResponseBody);
 
                             var apiErrors = ExtractApiErrorMessages(result.ResponseBody);
 
@@ -1389,7 +1077,6 @@ namespace GXUploader
             }
         }
 
-
         private void WriteApiPayloadResponseToDailyFile(string upcOrAlu, string payloadJson, string responseBody)
         {
             try
@@ -1400,10 +1087,7 @@ namespace GXUploader
                 string date = DateTime.Now.ToString("MM/dd/yyyy HH:mm:ss");
 
                 AppendLineToFile(path, $"[{date}][{key}][apiPayload] - {payloadJson}");
-                AppendLineToFile(path, $"[{date}][{key}][apiResponse] - {responseBody}");
                 AppendLineToFile(path, "");
-
-                //LogInfo($"API payload+response appended to daily API log: {Path.GetFileName(path)}");
             }
             catch (Exception ex)
             {
@@ -1431,14 +1115,7 @@ namespace GXUploader
                 };
             }
 
-            var options = new JsonSerializerOptions
-            {
-                WriteIndented = true,
-                PropertyNamingPolicy = null,
-                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
-            };
-
-            string json = JsonSerializer.Serialize(payload, options);
+            string json = JsonSerializer.Serialize(payload, _jsonOptions);
 
             try
             {
@@ -1459,7 +1136,7 @@ namespace GXUploader
                 string finalBody = apiErrors.Count > 0
                     ? string.Join(Environment.NewLine, apiErrors)
                     : rawBody;
-                //WriteApiPayloadResponseToDailyFile(vendCode, payloadJson, "CREATION FAILED");  //payloadapi
+
                 LogInfo($"POST {url}");
                 LogInfo($"HTTP {(int)resp.StatusCode} {resp.ReasonPhrase}");
 
@@ -1528,11 +1205,12 @@ namespace GXUploader
                 System.Globalization.DateTimeStyles.AdjustToUniversal | System.Globalization.DateTimeStyles.AssumeUniversal,
                 out DateTime result))
             {
-                return result; // stays UTC
+                return result;
             }
 
             return null;
         }
+
         private List<UploadWorkItem> BuildUploadWorkItemsFromDataTable(DataTable dt)
         {
             var list = new List<UploadWorkItem>();
@@ -1594,17 +1272,17 @@ namespace GXUploader
                 {
                     OriginApplication = "RProPrismWeb",
 
-                    DefaultReasonSidForCostMemo = costuploaderReasonSid,
-                    DefaultReasonSidForPriceMemo = priceuploaderReasonSid,
+                    DefaultReasonSidForCostMemo = NullIfWhiteSpace(costuploaderReasonSid),
+                    DefaultReasonSidForPriceMemo = NullIfWhiteSpace(priceuploaderReasonSid),
 
                     PrimaryItemDefinition = new PrimaryItemDefinition
                     {
-                        dcssid = dcsSid,
-                        vendsid = vendorSid,
-                        description1 = desc1,
-                        description2 = desc2,
-                        attribute = attr == "" ? null : attr,
-                        itemsize = size == "" ? null : size
+                        dcssid = NullIfWhiteSpace(dcsSid),
+                        vendsid = NullIfWhiteSpace(vendorSid),
+                        description1 = NullIfWhiteSpace(desc1),
+                        description2 = NullIfWhiteSpace(desc2),
+                        attribute = NullIfWhiteSpace(attr),
+                        itemsize = NullIfWhiteSpace(size)
                     },
 
                     UpdateStyleDefinition = false,
@@ -1614,22 +1292,22 @@ namespace GXUploader
 
                 var item = new InventoryItem
                 {
-                    sbssid = sbssid,
-                    dcssid = dcsSid,
-                    vendsid = vendorSid,
+                    sbssid = NullIfWhiteSpace(sbssid),
+                    dcssid = NullIfWhiteSpace(dcsSid),
+                    vendsid = NullIfWhiteSpace(vendorSid),
                     taxcodesid = NullIfWhiteSpace(taxCodeSid),
 
-                    description1 = desc1 == "" ? null: desc1,
-                    description2 = desc2 == "" ? null : desc2,
-                    description3 = desc3 == "" ? null : desc3,
-                    description4 = desc4 == "" ? null : desc4,
+                    description1 = NullIfWhiteSpace(desc1),
+                    description2 = NullIfWhiteSpace(desc2),
+                    description3 = NullIfWhiteSpace(desc3),
+                    description4 = NullIfWhiteSpace(desc4),
 
-                    attribute = attr == "" ? null : attr,
-                    itemsize = size == "" ? null : size,
+                    attribute = NullIfWhiteSpace(attr),
+                    itemsize = NullIfWhiteSpace(size),
 
                     cost = hasValidCost ? costValue : 0m,
                     lastrcvdcost = ParseDecimal(GetDT(dt, r, "ORDER_COST"), 0m),
-                    longdescription = longdescription,
+                    longdescription = NullIfWhiteSpace(longdescription),
 
                     spif = ParseInt(GetDT(dt, r, "SPIF"), 0),
                     serialtype = ParseInt(GetDT(dt, r, "Serial_Type"), 0),
@@ -1641,14 +1319,14 @@ namespace GXUploader
 
                     noninventory = ParseInt(GetDT(dt, r, "NON_INVENTORY"), 0),
 
-                    upc = UseUpcMode ? upc : null,
-                    alu = !UseUpcMode ? alu : null,
+                    upc = NullIfWhiteSpace(upc),
+                    alu = NullIfWhiteSpace(alu),
 
                     maxdiscperc1 = ParseInt(GetDT(dt, r, "MAX_DISC"), 100),
                     maxdiscperc2 = ParseInt(GetDT(dt, r, "ACC._MAX_DISC"), 100),
                     tradediscpercent = ParseInt(GetDT(dt, r, "Trade_Discount"), 0),
 
-                    dcscode = dcscode,
+                    dcscode = NullIfWhiteSpace(dcscode),
 
                     udf1date = ParseUdfUtcDate(GetDT(dt, r, "Date_UDF_1")),
                     udf2date = ParseUdfUtcDate(GetDT(dt, r, "Date_UDF_2")),
@@ -1658,14 +1336,12 @@ namespace GXUploader
                     invnprice = new List<InvnPrice>()
                 };
 
-                // TEXT1–TEXT10
                 for (int i = 1; i <= 10; i++)
                 {
                     var val = GetDT(dt, r, $"TEXT{i}");
-                    typeof(InventoryItem).GetProperty($"text{i}")?.SetValue(item, val);
+                    typeof(InventoryItem).GetProperty($"text{i}")?.SetValue(item, NullIfWhiteSpace(val));
                 }
 
-                // UDF handling
                 UpdateInvnExtend extend = null;
 
                 foreach (DataColumn c in dt.Columns)
@@ -1681,25 +1357,23 @@ namespace GXUploader
 
                     if (idx <= 5)
                     {
-                        typeof(InventoryItem).GetProperty($"udf{idx}string")?.SetValue(item, val);
+                        typeof(InventoryItem).GetProperty($"udf{idx}string")?.SetValue(item, val.Trim());
                     }
                     else
                     {
                         extend ??= new UpdateInvnExtend { invnsbsitemsid = null };
-                        typeof(UpdateInvnExtend).GetProperty($"udf{idx}string")?.SetValue(extend, val);
+                        typeof(UpdateInvnExtend).GetProperty($"udf{idx}string")?.SetValue(extend, val.Trim());
                     }
                 }
 
-                // LARGE TEXT UDF
                 if (extend != null)
                 {
-                    extend.udf1largestring = GetDT(dt, r, "Long_Text_UDF1");
-                    extend.udf2largestring = GetDT(dt, r, "Long_Text_UDF2");
+                    extend.udf1largestring = NullIfWhiteSpace(GetDT(dt, r, "Long_Text_UDF1"));
+                    extend.udf2largestring = NullIfWhiteSpace(GetDT(dt, r, "Long_Text_UDF2"));
 
                     item.invnextend.Add(extend);
                 }
 
-                // PRICE LEVELS
                 var addedPriceLevels = new HashSet<int>();
 
                 foreach (DataColumn c in dt.Columns)
@@ -1723,9 +1397,8 @@ namespace GXUploader
                     {
                         price = price,
                         invnsbsitemsid = null,
-                        sbssid = sbssid,
-                        pricelvlsid = priceLvlSid,
-                        //seasonsid = seasonSid
+                        sbssid = NullIfWhiteSpace(sbssid),
+                        pricelvlsid = NullIfWhiteSpace(priceLvlSid)
                     });
 
                     if (lvl == 1)
@@ -1738,7 +1411,6 @@ namespace GXUploader
                     addedPriceLevels.Add(lvl);
                 }
 
-                // SIMPLE MARGIN COMPUTE
                 if (item.cost > 0 && item.actstrprice > 0)
                 {
                     decimal margin = item.actstrprice - item.cost;
@@ -1916,7 +1588,7 @@ namespace GXUploader
                 }
             };
 
-            return JsonSerializer.Serialize(payload);
+            return JsonSerializer.Serialize(payload, _jsonOptions);
         }
 
         private async Task CreateVendorAsync(string vendCode, string vendName, string subsidiarySid)
@@ -1979,136 +1651,6 @@ namespace GXUploader
             }
         }
 
-
-        //private void UpdateTextUdfSidFromDb(DataTable payloadDt)         //old adding new data if not existed
-        //{
-        //    if (payloadDt.Rows.Count == 0)
-        //    {
-        //        LogWarn("[TEXT_UDF_SID] Payload DataTable is empty.");
-        //        return;
-        //    }
-
-        //    using var conn = OpenOracleConnection();
-
-        //    var udfIndexes = new List<int>();
-
-        //    foreach (DataColumn col in payloadDt.Columns)
-        //    {
-        //        string name = (col.ColumnName ?? "").Trim();
-
-        //        if (!name.StartsWith("TEXT_UDF", StringComparison.OrdinalIgnoreCase))
-        //            continue;
-
-        //        string suffix = name.Substring("TEXT_UDF".Length);
-        //        if (!int.TryParse(suffix, out int idx))
-        //            continue;
-
-        //        udfIndexes.Add(idx);
-        //    }
-
-        //    udfIndexes = udfIndexes.Distinct().OrderBy(x => x).ToList();
-
-        //    if (udfIndexes.Count == 0)
-        //    {
-        //        //LogWarn("[TEXT_UDF_SID] No TEXT_UDF{n} columns found.");
-        //        return;
-        //    }
-
-        //    foreach (int idx in udfIndexes)
-        //    {
-        //        string sidCol = $"TEXT_UDF_SID{idx}";
-        //        if (!payloadDt.Columns.Contains(sidCol))
-        //            payloadDt.Columns.Add(sidCol, typeof(string));
-        //    }
-
-        //    for (int r = 0; r < payloadDt.Rows.Count; r++)
-        //    {
-        //        foreach (int idx in udfIndexes)
-        //        {
-        //            string udfCol = $"TEXT_UDF{idx}";
-        //            string sidCol = $"TEXT_UDF_SID{idx}";
-
-        //            string udfOption = payloadDt.Rows[r][udfCol]?.ToString()?.Trim() ?? "";
-
-        //            if (string.IsNullOrWhiteSpace(udfOption))
-        //            {
-        //                payloadDt.Rows[r][sidCol] = DBNull.Value;
-        //                continue;
-        //            }
-
-        //            string udfSid = "";
-        //            using (var cmdUdf = new OracleCommand(
-        //                @"SELECT sid
-        //                  FROM rps.invn_udf
-        //                  WHERE udf_no = :udfNo
-        //                  FETCH FIRST 1 ROWS ONLY",
-        //                conn))
-        //            {
-        //                cmdUdf.BindByName = true;
-        //                cmdUdf.CommandTimeout = OracleCommandTimeoutSeconds;
-        //                cmdUdf.Parameters.Add(":udfNo", OracleDbType.Int32).Value = idx;
-        //                udfSid = cmdUdf.ExecuteScalar()?.ToString()?.Trim() ?? "";
-        //            }
-
-        //            if (string.IsNullOrWhiteSpace(udfSid))
-        //            {
-        //                payloadDt.Rows[r][sidCol] = DBNull.Value;
-        //                //LogWarn($"[TEXT_UDF_SID][Row {r + 1}] No UDF SID found for TEXT_UDF{idx}.");
-        //                continue;
-        //            }
-
-        //            string optionSid = "";
-        //            using (var cmdOpt = new OracleCommand(
-        //                @"SELECT sid
-        //                  FROM rps.invn_udf_option
-        //                  WHERE udf_sid = :udfSid
-        //                    AND udf_option = :udfOption
-        //                  FETCH FIRST 1 ROWS ONLY",
-        //                conn))
-        //            {
-        //                cmdOpt.BindByName = true;
-        //                cmdOpt.CommandTimeout = OracleCommandTimeoutSeconds;
-        //                cmdOpt.Parameters.Add(":udfSid", OracleDbType.Varchar2).Value = udfSid;
-        //                cmdOpt.Parameters.Add(":udfOption", OracleDbType.Varchar2).Value = udfOption;
-
-        //                optionSid = cmdOpt.ExecuteScalar()?.ToString()?.Trim() ?? "";
-        //            }
-
-        //            if (string.IsNullOrWhiteSpace(optionSid))
-        //            {
-        //                CreateInvnUdfOptionAsync(udfSid, udfOption).GetAwaiter().GetResult();
-
-        //                using var cmdOpt2 = new OracleCommand(
-        //                    @"SELECT sid
-        //                      FROM rps.invn_udf_option
-        //                      WHERE udf_sid = :udfSid
-        //                        AND udf_option = :udfOption
-        //                      FETCH FIRST 1 ROWS ONLY",
-        //                    conn);
-
-        //                cmdOpt2.BindByName = true;
-        //                cmdOpt2.CommandTimeout = OracleCommandTimeoutSeconds;
-        //                cmdOpt2.Parameters.Add(":udfSid", OracleDbType.Varchar2).Value = udfSid;
-        //                cmdOpt2.Parameters.Add(":udfOption", OracleDbType.Varchar2).Value = udfOption;
-
-        //                optionSid = cmdOpt2.ExecuteScalar()?.ToString()?.Trim() ?? "";
-        //            }
-
-        //            if (!string.IsNullOrWhiteSpace(optionSid))
-        //            {
-        //                payloadDt.Rows[r][sidCol] = optionSid;
-        //            }
-        //            else
-        //            {
-        //                payloadDt.Rows[r][sidCol] = DBNull.Value;
-        //                //LogWarn($"[TEXT_UDF_SID][Row {r + 1}] Failed to get/create SID for {udfCol} value '{udfOption}'.");
-        //            }
-        //        }
-        //    }
-
-        //    LogInfo($"[TEXT_UDF_SID] Done. Generated TEXT_UDF_SID columns for indexes: {string.Join(",", udfIndexes)}");
-        //}
-
         private void UpdateTextUdfSidFromDb(DataTable payloadDt)
         {
             if (payloadDt.Rows.Count == 0)
@@ -2142,7 +1684,6 @@ namespace GXUploader
                 return;
             }
 
-            // Ensure SID columns exist
             foreach (int idx in udfIndexes)
             {
                 string sidCol = $"TEXT_UDF_SID{idx}";
@@ -2165,7 +1706,6 @@ namespace GXUploader
                         continue;
                     }
 
-                    // Get UDF SID
                     string udfSid = "";
                     using (var cmdUdf = new OracleCommand(
                         @"SELECT sid
@@ -2187,7 +1727,6 @@ namespace GXUploader
                         continue;
                     }
 
-                    // Get Option SID (NO CREATE)
                     string optionSid = "";
                     using (var cmdOpt = new OracleCommand(
                         @"SELECT sid
@@ -2211,11 +1750,7 @@ namespace GXUploader
                     }
                     else
                     {
-                        // Do NOT create if not exists
                         payloadDt.Rows[r][sidCol] = DBNull.Value;
-
-                        // Optional logging
-                        //LogWarn($"[TEXT_UDF_SID][Row {r + 1}] Option not found for {udfCol} value '{udfOption}'.");
                     }
                 }
             }
@@ -2241,7 +1776,7 @@ namespace GXUploader
                             active = true
                         }
                     }
-                });
+                }, _jsonOptions);
 
                 string auth = await GetAuthSessionAsync().ConfigureAwait(false);
 
@@ -2328,11 +1863,9 @@ namespace GXUploader
             if (value == null || value == DBNull.Value)
                 return null;
 
-            // Handles timestamp with timezone
             if (DateTimeOffset.TryParse(value.ToString(), out var dto))
                 return dto.ToString("MM/dd/yyyy");
 
-            // fallback if already DateTime
             if (DateTime.TryParse(value.ToString(), out var dt))
                 return dt.ToString("MM/dd/yyyy");
 
@@ -2366,14 +1899,12 @@ namespace GXUploader
                 i.non_inventory AS noninventory,
                 i.long_description AS longdescription,
 
-                -- UDF 1–5
                 i.udf1_string,
                 i.udf2_string,
                 i.udf3_string,
                 i.udf4_string,
                 i.udf5_string,
 
-                -- UDF 6–15
                 ie.sid AS extend_sid,
                 ie.udf6_string,
                 ie.udf7_string,
@@ -2388,7 +1919,6 @@ namespace GXUploader
 
                 i.spif,
 
-                -- TEXT 1–10
                 i.text1,
                 i.text2,
                 i.text3,
@@ -2403,27 +1933,22 @@ namespace GXUploader
 
                 s.sbs_no,
 
-                -- PRICE LEVEL 1
                 pl1.sid AS price_sid_1,
                 pl1.price_lvl_sid AS price_lvl_sid_1,
                 pl1.price AS price_lvl_1,
 
-                -- PRICE LEVEL 2
                 pl2.sid AS price_sid_2,
                 pl2.price_lvl_sid AS price_lvl_sid_2,
                 pl2.price AS price_lvl_2,
 
-                -- PRICE LEVEL 3
                 pl3.sid AS price_sid_3,
                 pl3.price_lvl_sid AS price_lvl_sid_3,
                 pl3.price AS price_lvl_3,
 
-                -- PRICE LEVEL 4
                 pl4.sid AS price_sid_4,
                 pl4.price_lvl_sid AS price_lvl_sid_4,
                 pl4.price AS price_lvl_4,
 
-                -- PRICE LEVEL 5
                 pl5.sid AS price_sid_5,
                 pl5.price_lvl_sid AS price_lvl_sid_5,
                 pl5.price AS price_lvl_5
@@ -2445,7 +1970,6 @@ namespace GXUploader
             LEFT JOIN RPS.VENDOR v
                 ON v.sid = i.vend_sid
 
-            -- LEVEL 1
             LEFT JOIN (
                 SELECT 
                     p.sid,
@@ -2461,7 +1985,6 @@ namespace GXUploader
                 ON pl1.INVN_SBS_ITEM_SID = i.SID
                AND pl1.SBS_SID = s.SID
 
-            -- LEVEL 2
             LEFT JOIN (
                 SELECT 
                     p.sid,
@@ -2477,7 +2000,6 @@ namespace GXUploader
                 ON pl2.INVN_SBS_ITEM_SID = i.SID
                AND pl2.SBS_SID = s.SID
 
-            -- LEVEL 3
             LEFT JOIN (
                 SELECT 
                     p.sid,
@@ -2493,7 +2015,6 @@ namespace GXUploader
                 ON pl3.INVN_SBS_ITEM_SID = i.SID
                AND pl3.SBS_SID = s.SID
 
-            -- LEVEL 4
             LEFT JOIN (
                 SELECT 
                     p.sid,
@@ -2509,7 +2030,6 @@ namespace GXUploader
                 ON pl4.INVN_SBS_ITEM_SID = i.SID
                AND pl4.SBS_SID = s.SID
 
-            -- LEVEL 5
             LEFT JOIN (
                 SELECT 
                     p.sid,
@@ -2569,16 +2089,13 @@ namespace GXUploader
                 cost = DbToDecimal(reader, "cost"),
 
                 taxcodesid = DbToString(reader, "taxcodesid"),
-                //row_version = DbToString(reader, "row_version"),
 
-                // ✅ UDF 1–5
                 udf1_string = DbToString(reader, "udf1_string"),
                 udf2_string = DbToString(reader, "udf2_string"),
                 udf3_string = DbToString(reader, "udf3_string"),
                 udf4_string = DbToString(reader, "udf4_string"),
                 udf5_string = DbToString(reader, "udf5_string"),
 
-                // ✅ UDF 6–15
                 udf6_string = DbToString(reader, "udf6_string"),
                 udf7_string = DbToString(reader, "udf7_string"),
                 udf8_string = DbToString(reader, "udf8_string"),
@@ -2590,10 +2107,8 @@ namespace GXUploader
                 udf14_string = DbToString(reader, "udf14_string"),
                 udf15_string = DbToString(reader, "udf15_string"),
 
-                // ✅ EXTEND SID
                 extend_sid = DbToString(reader, "extend_sid"),
 
-                // ✅ TEXT 1–10
                 text1 = DbToString(reader, "text1"),
                 text2 = DbToString(reader, "text2"),
                 text3 = DbToString(reader, "text3"),
@@ -2676,7 +2191,6 @@ namespace GXUploader
             var updateItem = new UpdateInventoryItem
             {
                 sid = itemSid,
-                sbssid = NullIfWhiteSpace(sourceInv.sbssid),
                 dcscode = NullIfWhiteSpace(sourceInv.dcscode),
                 dcssid = NullIfWhiteSpace(sourceInv.dcssid),
                 vendsid = NullIfWhiteSpace(sourceInv.vendsid),
@@ -2688,7 +2202,6 @@ namespace GXUploader
 
                 taxcodesid = NullIfWhiteSpace(sourceInv.taxcodesid),
 
-                // if cost <= 0 → null (make sure cost is nullable: decimal?)
                 cost = sourceInv.cost > 0 ? sourceInv.cost : null,
 
                 text1 = NullIfWhiteSpace(sourceInv.text1),
@@ -2715,8 +2228,8 @@ namespace GXUploader
                 udf4string = NullIfWhiteSpace(sourceInv.udf4string),
                 udf5string = NullIfWhiteSpace(sourceInv.udf5string),
 
-                upc = UseUpcMode ? NullIfWhiteSpace(sourceInv.upc) : null,
-                alu = UseUpcMode ? null : NullIfWhiteSpace(sourceInv.alu),
+                upc = NullIfWhiteSpace(sourceInv.upc),
+                alu = NullIfWhiteSpace(sourceInv.alu),
 
                 kittype = sourceInv.kittype,
                 ltypriceinpoints = sourceInv.ltypriceinpoints,
@@ -2727,6 +2240,7 @@ namespace GXUploader
                 activeseasonsid = seasonSid,
 
                 actstrpricewt = sourceInv.actstrpricewt,
+                sbssid = NullIfWhiteSpace(sourceInv.sbssid),
                 longdescription = sourceInv.longdescription,
                 spif = sourceInv.spif,
 
@@ -2738,9 +2252,6 @@ namespace GXUploader
                 invnextend = new List<UpdateInvnExtend>()
             };
 
-            // =========================================================
-            // ✅ FIXED INVNEXTEND HANDLING
-            // =========================================================
             var sourceExtend = sourceInv.invnextend?.FirstOrDefault();
             string? extendSid = GetExtendSid(itemSid);
             bool hasExtendData =
@@ -2762,7 +2273,7 @@ namespace GXUploader
             {
                 updateItem.invnextend.Add(new UpdateInvnExtend
                 {
-                    sid = extendSid, // null = insert, else update
+                    sid = extendSid,
                     invnsbsitemsid = itemSid,
                     udf6string = EmptyIfNull(sourceExtend?.udf6string),
                     udf7string = EmptyIfNull(sourceExtend?.udf7string),
@@ -2775,17 +2286,8 @@ namespace GXUploader
                     udf14string = EmptyIfNull(sourceExtend?.udf14string),
                     udf15string = EmptyIfNull(sourceExtend?.udf15string)
                 });
-
-                //LogInfo($"[UPDATE][{work.Key}] Added invnextend with UDF6–15");
-            }
-            else
-            {
-                //LogInfo($"[UPDATE][{work.Key}] Skipping invnextend (no data)");
             }
 
-            // =========================================================
-            // PRICE HANDLING
-            // =========================================================
             if (sourceInv.invnprice != null && sourceInv.invnprice.Count > 0)
             {
                 foreach (var srcPrice in sourceInv.invnprice)
@@ -2797,47 +2299,45 @@ namespace GXUploader
                         continue;
 
                     var dbPrice = existing.Prices?
-                        .FirstOrDefault(p => p.price_lvl_sid == srcPrice.pricelvlsid);
+                        .FirstOrDefault(p =>
+                            p != null &&
+                            string.Equals(
+                                p.price_lvl_sid?.Trim(),
+                                srcPrice.pricelvlsid.Trim(),
+                                StringComparison.OrdinalIgnoreCase
+                            )
+                        );
 
-                    // ✅ ONLY update if existing record is found
-                    if (dbPrice == null || string.IsNullOrWhiteSpace(dbPrice.sid))
-                        continue;
-
-                    updateItem.invnprice.Add(new UpdateInvnPrice
+                    if (dbPrice != null && !string.IsNullOrWhiteSpace(dbPrice.sid))
                     {
-                        sid = dbPrice.sid, // use existing SID → UPDATE
-                        price = srcPrice.price,
-                        invnsbsitemsid = itemSid,
-                        sbssid = srcPrice.sbssid,
-                        pricelvlsid = srcPrice.pricelvlsid,
-                        seasonsid = NullIfWhiteSpace(srcPrice.seasonsid) ?? seasonSid
-                    });
+                        updateItem.invnprice.Add(new UpdateInvnPrice
+                        {
+                            sid = dbPrice.sid,
+                            price = srcPrice.price,
+                            invnsbsitemsid = itemSid,
+                            sbssid = NullIfWhiteSpace(srcPrice.sbssid) ?? NullIfWhiteSpace(sourceInv.sbssid),
+                            pricelvlsid = srcPrice.pricelvlsid,
+                            seasonsid = NullIfWhiteSpace(srcPrice.seasonsid) ?? seasonSid
+                        });
+                    }
+                    else
+                    {
+                        updateItem.invnprice.Add(new UpdateInvnPrice
+                        {
+                            sid = null,
+                            price = srcPrice.price,
+                            invnsbsitemsid = itemSid,
+                            sbssid = NullIfWhiteSpace(srcPrice.sbssid) ?? NullIfWhiteSpace(sourceInv.sbssid),
+                            pricelvlsid = srcPrice.pricelvlsid,
+                            seasonsid = NullIfWhiteSpace(srcPrice.seasonsid) ?? seasonSid
+                        });
+                    }
                 }
             }
-
-            //bool hasPriceUpdates = updateItem.invnprice.Count > 0;
-            //bool hasValidCost = sourceInv.cost > 0;
-            //string? costuploaderReasonSid = null;
-            //string? priceuploaderReasonSid = null;
-            //string? uploaderReasonSidCached = null;
-
-            //if (hasValidCost)
-            //{
-            //    uploaderReasonSidCached ??= ReasonRepository.GetUploaderReasonSid();
-            //    costuploaderReasonSid = uploaderReasonSidCached;
-            //    priceuploaderReasonSid = uploaderReasonSidCached;
-            //}
-            //else
-            //{
-            //    uploaderReasonSidCached ??= ReasonRepository.GetUploaderReasonSid();
-            //    costuploaderReasonSid = null;
-            //    priceuploaderReasonSid = uploaderReasonSidCached;
-            //}
 
             decimal existingCost = existing.cost ?? 0;
             decimal incomingCost = sourceInv.cost;
 
-            // ✅ rule: set reason if ANY cost exists
             bool shouldSetCostReason = existingCost > 0 || incomingCost > 0;
 
             string? costuploaderReasonSid = null;
@@ -2850,7 +2350,6 @@ namespace GXUploader
                 costuploaderReasonSid = uploaderReasonSidCached;
             }
 
-            // keep your price logic (or refine separately)
             uploaderReasonSidCached ??= ReasonRepository.GetUploaderReasonSid();
             priceuploaderReasonSid = uploaderReasonSidCached;
 
@@ -2877,8 +2376,8 @@ namespace GXUploader
                         UpdateStyleLty = false,
                         UpdateStylePrice = true,
                         DefaultReasonSidForQtyMemo = null,
-                        DefaultReasonSidForCostMemo = costuploaderReasonSid, //"774146417000161027",
-                        DefaultReasonSidForPriceMemo = priceuploaderReasonSid //"774146417000161027"
+                        DefaultReasonSidForCostMemo = NullIfWhiteSpace(costuploaderReasonSid),
+                        DefaultReasonSidForPriceMemo = NullIfWhiteSpace(priceuploaderReasonSid)
                     }
                 }
             };
@@ -2894,9 +2393,9 @@ namespace GXUploader
                 FROM RPS.invn_sbs_extend
                 WHERE invn_sbs_item_sid = :itemSid";
 
-            using var conn = OpenOracleConnection(); // returns OracleConnection
+            using var conn = OpenOracleConnection();
             if (conn.State != System.Data.ConnectionState.Open)
-                conn.Open(); // only open if not already open
+                conn.Open();
 
             using var cmd = conn.CreateCommand();
             cmd.CommandText = sql;
@@ -2924,7 +2423,6 @@ namespace GXUploader
 
         private bool HasItemChanges(UploadWorkItem work, ExistingItemInfo existing)
         {
-
             bool isUDFTextEnabled = _config.IsUDFTextEnabled();
             bool isUDFDateEnabled = _config.IsUDFDateEnabled();
             bool isTextEnabled = _config.IsTextEnabled();
@@ -2961,22 +2459,16 @@ namespace GXUploader
             string csvAlu = GetDT(_payloadTable, row, "ALU");
             string csvUpc = GetDT(_payloadTable, row, "UPC");
 
-            if (UseUpcMode) Check("upc", !AreEqual(csvUpc, existing.upc), csvUpc, existing.upc);
-            else Check("alu", !AreEqual(csvAlu, existing.alu), csvAlu, existing.alu);
+            Check("upc", !AreEqual(csvUpc, existing.upc), csvUpc, existing.upc);
+            Check("alu", !AreEqual(csvAlu, existing.alu), csvAlu, existing.alu);
 
-            //vendor
             if (isVendorNameEnabled)
             {
-                Check("vendor_code",!AreEqual(GetDT(_payloadTable, row, "VENDOR_CODE"), existing.vendor_code),GetDT(_payloadTable, row, "VENDOR_CODE"),existing.vendor_code);
-                Check("vendor_name",!AreEqual(GetDT(_payloadTable, row, "VENDOR_NAME"), existing.vendor_name),GetDT(_payloadTable, row, "VENDOR_NAME"),existing.vendor_name);
+                Check("vendor_code", !AreEqual(GetDT(_payloadTable, row, "VENDOR_CODE"), existing.vendor_code), GetDT(_payloadTable, row, "VENDOR_CODE"), existing.vendor_code);
+                Check("vendor_name", !AreEqual(GetDT(_payloadTable, row, "VENDOR_NAME"), existing.vendor_name), GetDT(_payloadTable, row, "VENDOR_NAME"), existing.vendor_name);
             }
-            
+
             Check("item_size", !AreEqual(GetDT(_payloadTable, row, "SIZE"), existing.item_size), GetDT(_payloadTable, row, "SIZE"), existing.item_size);
-
-            //var csvDate = Convert.ToDateTime(GetDT(_payloadTable, row, "Date_UDF_1")).Date;
-            var dbDate = Convert.ToDateTime(existing.udf1date).Date;
-
-            //AreEqual(Convert.ToDateTime(GetDT(_payloadTable, row, "Date_UDF_1")).ToString("MM/dd/yyyy"),Convert.ToDateTime(existing.udf1date).ToString("MM/dd/yyyy"));
 
             if (isUDFDateEnabled)
             {
@@ -2984,14 +2476,7 @@ namespace GXUploader
                 Check("udf2date", !AreEqual(GetDT(_payloadTable, row, "Date_UDF_2"), existing.udf2date), GetDT(_payloadTable, row, "Date_UDF_2"), existing.udf2date);
                 Check("udf3date", !AreEqual(GetDT(_payloadTable, row, "Date_UDF_3"), existing.udf3date), GetDT(_payloadTable, row, "Date_UDF_3"), existing.udf3date);
             }
-            
 
-            //Check("lottype",!AreEqual(GetDT(_payloadTable, row, "Lot_Type"),existing.lottype?.ToString()),GetDT(_payloadTable, row, "Lot_Type"),existing.lottype?.ToString());
-            //Check("serialtype", !AreEqual(GetDT(_payloadTable, row, "Serial_Type"), existing.serialtype?.ToString()), GetDT(_payloadTable, row, "Serial_Type"), existing.serialtype?.ToString());
-
-            //Check("noninventory", !AreEqual(GetDT(_payloadTable, row, ",NON_INVENTORY"), existing.noninventory?.ToString()), GetDT(_payloadTable, row, ",NON_INVENTORY"), existing.noninventory?.ToString());
-
-            //item details
             Check("description1", !AreEqual(GetDT(_payloadTable, row, "DESC1"), existing.description1), GetDT(_payloadTable, row, "DESC1"), existing.description1);
             Check("description2", !AreEqual(GetDT(_payloadTable, row, "DESC2"), existing.description2), GetDT(_payloadTable, row, "DESC2"), existing.description2);
             Check("description3", !AreEqual(GetDT(_payloadTable, row, "DESC3"), existing.description3), GetDT(_payloadTable, row, "DESC3"), existing.description3);
@@ -3003,13 +2488,7 @@ namespace GXUploader
             bool csvHasValue = decimal.TryParse(csvCost, out decimal costValue);
             decimal? csvCostValue = csvHasValue ? costValue : null;
 
-            Check("cost",!AreEqualDecimal(csvCostValue, existing.cost),csvCost,existing.cost);
-
-            //string csvCost = GetDT(_payloadTable, row, "COST");
-            //if (decimal.TryParse(csvCost, out decimal costValue))
-            //Check("cost", !AreEqualDecimal(costValue, existing.cost), costValue, existing.cost);
-            //else if (!string.IsNullOrWhiteSpace(csvCost))
-            //    Check("cost", true, csvCost, existing.cost);
+            Check("cost", !AreEqualDecimal(csvCostValue, existing.cost), csvCost, existing.cost);
 
             string csvSpif = GetDT(_payloadTable, row, "SPIF");
             if (decimal.TryParse(csvSpif, out decimal spifValue))
@@ -3060,7 +2539,6 @@ namespace GXUploader
                 Check("text10", !AreEqual(GetDT(_payloadTable, row, "TEXT10"), existing.text10), GetDT(_payloadTable, row, "TEXT10"), existing.text10);
             }
 
-            //udf fields
             if (isUDFTextEnabled)
             {
                 Check("udf1_string", !AreEqual(GetDT(_payloadTable, row, "TEXT_UDF1"), existing.udf1_string), GetDT(_payloadTable, row, "TEXT_UDF1"), existing.udf1_string);
@@ -3068,7 +2546,6 @@ namespace GXUploader
                 Check("udf3_string", !AreEqual(GetDT(_payloadTable, row, "TEXT_UDF3"), existing.udf3_string), GetDT(_payloadTable, row, "TEXT_UDF3"), existing.udf3_string);
                 Check("udf4_string", !AreEqual(GetDT(_payloadTable, row, "TEXT_UDF4"), existing.udf4_string), GetDT(_payloadTable, row, "TEXT_UDF4"), existing.udf4_string);
                 Check("udf5_string", !AreEqual(GetDT(_payloadTable, row, "TEXT_UDF5"), existing.udf5_string), GetDT(_payloadTable, row, "TEXT_UDF5"), existing.udf5_string);
-
 
                 Check("udf6_string", !AreEqual(GetDT(_payloadTable, row, "TEXT_UDF6"), existing.udf6_string), GetDT(_payloadTable, row, "TEXT_UDF6"), existing.udf6_string);
                 Check("udf7_string", !AreEqual(GetDT(_payloadTable, row, "TEXT_UDF7"), existing.udf7_string), GetDT(_payloadTable, row, "TEXT_UDF7"), existing.udf7_string);
@@ -3115,17 +2592,12 @@ namespace GXUploader
                 .Replace("\t", " ")
                 .Trim();
 
-            // ✅ replace comma with space (fix)
             s = s.Replace(",", " ");
-
-            // optional: normalize dots
             s = s.Replace(".", "");
 
-            // normalize multiple spaces → single space
             while (s.Contains("  "))
                 s = s.Replace("  ", " ");
 
-            // normalize case
             s = s.ToUpperInvariant();
 
             return s;
@@ -3184,7 +2656,6 @@ namespace GXUploader
                 WHERE s.sbs_no = :sbsNo
                 FETCH FIRST 1 ROWS ONLY";
 
-            // ✅ Use correct datatype (string is safer unless you're 100% sure it's numeric)
             cmd.Parameters.Add(":sbsNo", OracleDbType.Varchar2).Value = sbsNoText.Trim();
             cmd.Parameters.Add(":tax_code", OracleDbType.Varchar2).Value = taxCode.Trim();
 
@@ -3219,7 +2690,6 @@ namespace GXUploader
             if (string.IsNullOrWhiteSpace(sbsCol))
                 throw new Exception("CSV column 'SBS_No' / 'SBS_No.' not found.");
 
-            // Optional: ensure tax_code column exists in CSV
             if (!dt.Columns.Contains("TAX_CODE"))
                 throw new Exception("CSV column 'TAX_CODE' not found.");
 
@@ -3236,13 +2706,11 @@ namespace GXUploader
 
                     if (string.IsNullOrWhiteSpace(sbsNoText))
                     {
-                        //LogWarn($"[Row {i + 1}] [SBSSID/TAXCODE] Empty SBS_No. Skipped.");
                         continue;
                     }
 
                     if (string.IsNullOrWhiteSpace(taxCode))
                     {
-                        //LogWarn($"[Row {i + 1}] [SBSSID/TAXCODE] Empty TAX_CODE. Skipped.");
                         continue;
                     }
 
@@ -3256,8 +2724,6 @@ namespace GXUploader
 
                     dt.Rows[i]["SBSSID"] = info.Sbssid;
                     dt.Rows[i]["TAXCODE_SID"] = info.Taxcodesid;
-
-                    //LogInfo($"[Row {i + 1}] [SBSSID/TAXCODE] SBS_No={sbsNoText}, TAX_CODE={taxCode} -> SBSSID={info.Sbssid}, TAXCODE_SID={info.Taxcodesid}");
                 }
                 catch (Exception ex)
                 {

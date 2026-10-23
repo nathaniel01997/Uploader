@@ -23,7 +23,7 @@ namespace GXUploader.Helpers
 
         private static readonly string ConfigPath =
             Path.GetFullPath(
-                Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"..\..\..\prism_config.txt")
+                Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "prism_config.txt")
             );
 
         private static string BuildWorkstation(string host, int port)

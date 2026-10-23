@@ -1,6 +1,6 @@
-Host=desktop-qd2cdlj
-Username=sysadmin
-Password=sysadmin
+Host=desktop-5kcr76j
+Username=prism_custom
+Password=cust0m@2024!
 Port=8080
-Workstation=desktop-qd2cdlj:8080
+Workstation=desktop-5kcr76j:8080
 ScanType=1

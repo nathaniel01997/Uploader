@@ -20,7 +20,7 @@ namespace GXUploader.Helper.Inventory
             if (!string.IsNullOrWhiteSpace(_cachedUploaderSid))
                 return _cachedUploaderSid;
 
-            using var conn = new OracleConnection(ConnString);
+            using var conn = new OracleConnection(DbHelper.GetOracleConnection());
             conn.Open();
 
             const string sql = @"

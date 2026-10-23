@@ -7,11 +7,9 @@ namespace GXUploader
     public partial class PageDatabase : UserControl
     {
         private static readonly string configPath =
-            Path.GetFullPath(
-                Path.Combine(
-                    AppDomain.CurrentDomain.BaseDirectory,
-                    @"..\..\..\dbconfig.txt"
-                )
+            Path.Combine(
+                AppDomain.CurrentDomain.BaseDirectory,
+                "dbconfig.txt"
             );
 
         public PageDatabase()
