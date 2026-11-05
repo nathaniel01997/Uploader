@@ -162,6 +162,10 @@ namespace GXUploader.Model.Inventory
         public DateTime? udf1date { get; set; }
         public DateTime? udf2date { get; set; }
         public DateTime? udf3date { get; set; }
+        public int udf1float { get; set; }
+        public int udf2float { get; set; }
+        public int udf3float { get; set; }
+
     }
 
     public class InvnPrice
@@ -324,6 +328,9 @@ namespace GXUploader.Model.Inventory
         public int? noninventory { get; set; }
 
         public string? longdescription { get; set; }
+        public int? udf1float { get; set;  }
+        public int? udf2float { get; set; }
+        public int? udf3float { get; set; }
 
     }
 
@@ -455,8 +462,12 @@ namespace GXUploader.Model.Inventory
 
         public int? lottype { get; set; }
         public int? serialtype { get; set; }
-
         public string? longdescription { get; set; }
+
+        public string? udf1float { get; set; }
+        public string? udf2float { get; set; }
+        public string? udf3float { get; set; }
+
     }
 
     public class ExistingPriceInfo

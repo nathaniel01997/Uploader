@@ -1,4 +1,5 @@
 ﻿// PageInventory.cs
+using Google.Protobuf.WellKnownTypes;
 using GXUploader.Helper.Inventory;
 using GXUploader.Helpers;
 using GXUploader.Model.Inventory;
@@ -171,7 +172,7 @@ namespace GXUploader
             }
         }
 
-        private async void btnReadCsv_Click(object sender, EventArgs e)
+        private async void btnReadCsv_Click(object sender, EventArgs e)  
         {
             if (string.IsNullOrWhiteSpace(_selectedCsvPath) || !File.Exists(_selectedCsvPath))
             {
@@ -454,6 +455,7 @@ namespace GXUploader
             LogInfo("Vendor lookup + creation completed.");
         }
 
+
         private async Task UpdateDcsFromDbAsync(DataTable dt)
         {
             if (dt.Rows.Count == 0)
@@ -474,14 +476,14 @@ namespace GXUploader
 
             string[] requiredColumns =
             {
-                "DEPT_NAME",
-                "DEPT_CODE",
-                "CLASS_NAME",
-                "CLASS_CODE",
-                "SUBCLASS_NAME",
-                "SUBCLASS_CODE",
-                "SBS_No."
-            };
+        "DEPT_NAME",
+        "DEPT_CODE",
+        "CLASS_NAME",
+        "CLASS_CODE",
+        "SUBCLASS_NAME",
+        "SUBCLASS_CODE",
+        "SBS_No."
+    };
 
             bool requiresOtherColumns = dt.AsEnumerable()
                 .Any(row => string.IsNullOrWhiteSpace(row["DCS"]?.ToString()));
@@ -517,12 +519,12 @@ namespace GXUploader
 
                 using var cmd = new OracleCommand(
                     @"SELECT d.sid
-                      FROM rps.dcs d
-                      INNER JOIN rps.subsidiary s
-                          ON d.sbs_sid = s.sid
-                      WHERE d.dcs_code = :code
-                        AND s.sbs_no = :sbsno
-                      FETCH FIRST 1 ROWS ONLY",
+              FROM rps.dcs d
+              INNER JOIN rps.subsidiary s
+                  ON d.sbs_sid = s.sid
+              WHERE d.dcs_code = :code
+                AND s.sbs_no = :sbsno
+              FETCH FIRST 1 ROWS ONLY",
                     conn);
 
                 cmd.BindByName = true;
@@ -546,6 +548,15 @@ namespace GXUploader
 
                     string csvDcsValue = GetValue(row, "DCS");
                     string dcsCode = GetValue(row, "DCS_CODE");
+
+                    // Retain the original DCS code from the CSV.
+                    // DCS will be updated with the actual DCS SID.
+                    if (string.IsNullOrWhiteSpace(dcsCode) &&
+                        !string.IsNullOrWhiteSpace(csvDcsValue))
+                    {
+                        dcsCode = csvDcsValue;
+                        row["DCS_CODE"] = dcsCode;
+                    }
 
                     string deptName = GetValue(row, "DEPT_NAME");
                     string deptCode = GetValue(row, "DEPT_CODE");
@@ -637,12 +648,12 @@ namespace GXUploader
 
                     using (var taxCmd = new OracleCommand(
                         @"SELECT t.sid
-                          FROM rps.tax_code t
-                          INNER JOIN rps.subsidiary s
-                              ON t.sbs_sid = s.sid
-                          WHERE t.tax_code = :taxCode
-                            AND s.sbs_no = :sbsno
-                          FETCH FIRST 1 ROWS ONLY",
+                  FROM rps.tax_code t
+                  INNER JOIN rps.subsidiary s
+                      ON t.sbs_sid = s.sid
+                  WHERE t.tax_code = :taxCode
+                    AND s.sbs_no = :sbsno
+                  FETCH FIRST 1 ROWS ONLY",
                         conn))
                     {
                         taxCmd.BindByName = true;
@@ -668,22 +679,22 @@ namespace GXUploader
                     {
                         data = new[]
                         {
-                            new
-                            {
-                                originapplication = "RProPrismWeb",
-                                active = 1,
-                                sbssid = subsidiarySid,
-                                regional = false,
-                                d = deptCode,
-                                c = classCode,
-                                s = subClassCode,
-                                dcscode = dcsCode,
-                                dname = deptName,
-                                cname = className,
-                                sname = subClassName,
-                                taxcodesid = taxCodeSid
-                            }
-                        }
+                    new
+                    {
+                        originapplication = "RProPrismWeb",
+                        active = 1,
+                        sbssid = subsidiarySid,
+                        regional = false,
+                        d = deptCode,
+                        c = classCode,
+                        s = subClassCode,
+                        dcscode = dcsCode,
+                        dname = deptName,
+                        cname = className,
+                        sname = subClassName,
+                        taxcodesid = taxCodeSid
+                    }
+                }
                     };
 
                     string json = JsonSerializer.Serialize(payload, _jsonOptions);
@@ -725,6 +736,7 @@ namespace GXUploader
 
             LogInfo("[DCS] Lookup completed");
         }
+
 
         private void UpdatePriceSidFromDb(DataTable payloadDt)
         {
@@ -1331,6 +1343,10 @@ namespace GXUploader
                     udf1date = ParseUdfUtcDate(GetDT(dt, r, "Date_UDF_1")),
                     udf2date = ParseUdfUtcDate(GetDT(dt, r, "Date_UDF_2")),
                     udf3date = ParseUdfUtcDate(GetDT(dt, r, "Date_UDF_3")),
+
+                    udf1float = (int)ParseDecimal(GetDT(dt, r, "Number_UDF1"), 0m),
+                    udf2float = (int)ParseDecimal(GetDT(dt, r, "Number_UDF2"), 0m),
+                    udf3float = (int)ParseDecimal(GetDT(dt, r, "Number_UDF3"), 0m),
 
                     invnextend = new List<UpdateInvnExtend>(),
                     invnprice = new List<InvnPrice>()
@@ -2228,6 +2244,10 @@ namespace GXUploader
                 udf4string = NullIfWhiteSpace(sourceInv.udf4string),
                 udf5string = NullIfWhiteSpace(sourceInv.udf5string),
 
+                udf1float = sourceInv.udf1float,
+                udf2float = sourceInv.udf2float,
+                udf3float = sourceInv.udf3float,
+
                 upc = NullIfWhiteSpace(sourceInv.upc),
                 alu = NullIfWhiteSpace(sourceInv.alu),
 
@@ -2476,6 +2496,10 @@ namespace GXUploader
                 Check("udf2date", !AreEqual(GetDT(_payloadTable, row, "Date_UDF_2"), existing.udf2date), GetDT(_payloadTable, row, "Date_UDF_2"), existing.udf2date);
                 Check("udf3date", !AreEqual(GetDT(_payloadTable, row, "Date_UDF_3"), existing.udf3date), GetDT(_payloadTable, row, "Date_UDF_3"), existing.udf3date);
             }
+            Check("udf1float", !AreEqual(GetDT(_payloadTable, row, "Number_UDF1"), existing.udf1float), GetDT(_payloadTable, row, "Number_UDF1"), existing.udf1float);
+            Check("udf2float", !AreEqual(GetDT(_payloadTable, row, "Number_UDF2"), existing.udf2float), GetDT(_payloadTable, row, "Number_UDF2"), existing.udf2float);
+            Check("udf3float", !AreEqual(GetDT(_payloadTable, row, "Number_UDF3"), existing.udf3float), GetDT(_payloadTable, row, "Number_UDF3"), existing.udf3float);
+
 
             Check("description1", !AreEqual(GetDT(_payloadTable, row, "DESC1"), existing.description1), GetDT(_payloadTable, row, "DESC1"), existing.description1);
             Check("description2", !AreEqual(GetDT(_payloadTable, row, "DESC2"), existing.description2), GetDT(_payloadTable, row, "DESC2"), existing.description2);
